@@ -97,7 +97,7 @@ function OCRForm(props) {
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="fileUploader">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect}  required="true"/>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect}  required={true}/>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
@@ -116,14 +116,20 @@ function PostCorrInferenceForm(props) {
             <Row>
                 <Col xs="auto">
                     <Form.Group controlId="trainData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} />
+                        <Form.Control type="file" onChange={props.handleModelFileSelect} required={true}/>
                         <Form.Label className="mt-2">Model File</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
-                    <Form.Group controlId="unlabData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} />
+                    <Form.Group controlId="unlabeledData">
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} required={true}/>
                         <Form.Label className="mt-2">First-pass OCR</Form.Label>
+                    </Form.Group>
+                </Col>
+                <Col xs="auto">
+                    <Form.Group controlId="emailAddress">
+                        <Form.Control type="email" onChange={props.handleEmailChange} required={true}/>
+                        <Form.Label className="mt-2">Email Address</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
@@ -142,7 +148,7 @@ function PostCorrTrainingForm(props) {
             <Row>
                 <Col xs="auto">
                     <Form.Group controlId="trainData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleLabeledFileSelect} required="true"/>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleLabeledFileSelect} required={true}/>
                         <Form.Label className="mt-2">Training Data</Form.Label>
                     </Form.Group>
                 </Col>
@@ -154,7 +160,7 @@ function PostCorrTrainingForm(props) {
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="emailAddress">
-                        <Form.Control type="email" onChange={props.handleEmailChange} required="true"/>
+                        <Form.Control type="email" onChange={props.handleEmailChange} required={true}/>
                         <Form.Label className="mt-2">Email Address</Form.Label>
                     </Form.Group>
                 </Col>
@@ -169,25 +175,46 @@ function PostCorrTrainingForm(props) {
 }
 
 function PostCorrInference() {
-    const [labeledFiles, setLabeledFiles] = useState();
+    const [modelFile, setModelFile] = useState();
     const [unlabeledFiles, setUnlabeledFiles] = useState();
+    const [email, setEmail] = useState();
     const [textMessage, setTextMessage] = useState();
 
     function handleSubmit(e) {
         e.preventDefault();
-        console.log("You clicked upload on the post-correction training form.");
-    }
+        console.log("You clicked upload on the post-correction prediction form.");
 
-    function handleLabeledFileSelect(e) {
+        // Add code to send modelFile, unlabeledFiles, email to the backend and get monitoring URL.
+
+        const url = "toy_monitoring_url/job_id"
+
+        setTextMessage(<><p className="mb-0" key="0">
+                Post-correction job submitted!
+                </p>
+                <p className="mb-0" key="1">
+                Monitor the status of your job <a href={url}>here</a>.
+                </p>
+                <p className="mb-0" key="2">
+                When the job is complete, an email with the link to download the post-corrected text files will be sent to your email address.
+                </p></>);
+}
+
+    function handleModelFileSelect(e) {
         e.preventDefault();
-        console.log("You selected labeled data files on the post-correction training form.");
-        setLabeledFiles(e.target.files);
+        console.log("You selected model file on the post-correction inference form.");
+        setModelFile(e.target.files);
     }
 
     function handleUnlabeledFileSelect(e) {
         e.preventDefault();
-        console.log("You selected unlabeled data files on the post-correction training form.");
+        console.log("You selected unlabeled data files on the post-correction inference form.");
         setUnlabeledFiles(e.target.files);
+    }
+
+    function handleEmailChange(e) {
+        e.preventDefault();
+        console.log("Email address updated");
+        setEmail(e.target.value);
     }
 
     return (
@@ -200,10 +227,10 @@ function PostCorrInference() {
                             <Container>
                                 <Row className="justify-content-center">
                                     <Col xs="auto">
-                                        <PostCorrInferenceForm handleSubmit={handleSubmit} handleLabeledFileSelect={handleLabeledFileSelect} handleUnlabeledFileSelect={handleUnlabeledFileSelect} />
+                                        <PostCorrInferenceForm handleSubmit={handleSubmit} handleModelFileSelect={handleModelFileSelect} handleUnlabeledFileSelect={handleUnlabeledFileSelect} handleEmailChange={handleEmailChange} />
                                     </Col>
                                 </Row>
-                                <Row className="justify-content-center fs-5 text-danger">
+                                <Row className="justify-content-center text-success">
                                     {textMessage}
                                 </Row>
                             </Container>
@@ -211,7 +238,7 @@ function PostCorrInference() {
                     </Accordion.Item>
                 </Accordion>
             </Row>
-        </Container>        
+        </Container>
     )
 }
 
@@ -225,7 +252,7 @@ function PostCorrTraining() {
         e.preventDefault();
         console.log("You clicked upload on the post-correction training form.");
 
-        // Add code to end labeledFiles, unlabeledFiles, email to the backend and get monitoring URL.
+        // Add code to send labeledFiles, unlabeledFiles, email to the backend and get monitoring URL.
 
         const url = "toy_monitoring_url/job_id"
 
