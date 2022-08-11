@@ -89,14 +89,15 @@ function OCRForm(props) {
         <Form className="my-5" onSubmit={props.handleSubmit}>
             <Row>
                 <Col xs="auto">
-                    <Form.Select aria-label="Default select example">
-                        <option>Choose an OCR system</option>
-                        <option value="1">Google Vision</option>
+                    <Form.Select onChange={props.handleSystemSelect}>
+                        {/* <option value="" disabled>Choose an OCR system</option> */}
+                        <option value="google">Google Vision</option>
+                        <option value="tesseract" disabled>Tesseract</option>
                     </Form.Select>
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="fileUploader">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} />
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect}  required="true"/>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
@@ -109,20 +110,44 @@ function OCRForm(props) {
     );
 }
 
-function PostCorrForm(props) {
+function PostCorrInferenceForm(props) {
+    return (
+        <Row className="pt-5">
+            <Col xs="auto">
+                <Form.Group controlId="trainData">
+                    <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} />
+                    <Form.Label className="mt-2">Model File</Form.Label>
+                </Form.Group>
+            </Col>
+            <Col xs="auto">
+                <Form.Group controlId="unlabData">
+                    <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} />
+                    <Form.Label className="mt-2">First-pass OCR</Form.Label>
+                </Form.Group>
+            </Col>
+            <Col xs="auto">
+                <Button variant="primary" type="submit">
+                    Predict
+                </Button>
+            </Col>
+        </Row>
+    )
+}
+
+function PostCorrTrainingForm(props) {
     return (
         <Form className="my-5" onSubmit={props.handleSubmit}>
             <Row className="pb-5">
                 <Col xs="auto">
                     <Form.Group controlId="trainData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} />
-                        <Form.Label class="mt-2">Training Data</Form.Label>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleLabeledFileSelect} required="true"/>
+                        <Form.Label className="mt-2">Training Data</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
-                    <Form.Group controlId="unlabData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} />
-                        <Form.Label class="mt-2">Unlabeled Data</Form.Label>
+                    <Form.Group controlId="unlabeledData">
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} />
+                        <Form.Label className="mt-2">Unlabeled Data</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
@@ -131,37 +156,70 @@ function PostCorrForm(props) {
                     </Button>
                 </Col>
             </Row>
-            <Row className="pt-5">
-                <Col xs="auto">
-                    <Form.Group controlId="trainData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} />
-                        <Form.Label class="mt-2">Model File</Form.Label>
-                    </Form.Group>
-                </Col>
-                <Col xs="auto">
-                    <Form.Group controlId="unlabData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} />
-                        <Form.Label class="mt-2">First-pass OCR</Form.Label>
-                    </Form.Group>
-                </Col>
-                <Col xs="auto">
-                    <Button variant="primary" type="submit">
-                        Predict
-                    </Button>
-                </Col>
-            </Row>
         </Form>
     );
 }
 
-function App() {
+function PostCorr() {
+    const [labeledFiles, setLabeledFiles] = useState();
+    const [unlabeledFiles, setUnlabeledFiles] = useState();
+    const [textMessage, setTextMessage] = useState();
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        console.log("You clicked upload on the post-correction training form.");
+    }
+
+    function handleLabeledFileSelect(e) {
+        e.preventDefault();
+        console.log("You selected labeled data files on the post-correction training form.");
+        setLabeledFiles(e.target.files);
+    }
+
+    function handleUnlabeledFileSelect(e) {
+        e.preventDefault();
+        console.log("You selected unlabeled data files on the post-correction training form.");
+        setUnlabeledFiles(e.target.files);
+    }
+
+    return (
+        <Container>
+            <Row>
+                <Accordion>
+                    <Accordion.Item eventKey="train" key="train">
+                        <Accordion.Header>Train model</Accordion.Header>
+                        <Accordion.Body>
+                            <Container>
+                                <Row className="justify-content-center">
+                                    <Col xs="auto">
+                                        <PostCorrTrainingForm handleSubmit={handleSubmit} handleLabeledFileSelect={handleLabeledFileSelect} handleUnlabeledFileSelect={handleUnlabeledFileSelect} />
+                                    </Col>
+                                </Row>
+                                <Row className="justify-content-center fs-5 text-danger">
+                                    {textMessage}
+                                </Row>
+                            </Container>
+                        </Accordion.Body>
+                    </Accordion.Item>
+                </Accordion>
+            </Row>
+        </Container>
+        
+    )
+}
+
+function OCR() {
     const [files, setFiles] = useState();
     const [imgUploads, setUploads] = useState();
+    const [textMessage, setTextMessage] = useState();
+    const [ocrSystem, setSystem] = useState("google"); // ocrSystem variable is updated with the form, but not used in processing. It can be used for adding systems in the future.
     const url = "http://rabat.sp.cs.cmu.edu:8088/annotator/ocr-post-correction/";
 
     function handleSubmit(e) {
         e.preventDefault();
-        console.log("You clicked upload.");
+        console.log("You clicked upload on the OCR form.");
+
+        setTextMessage("Processing files...");
 
         let imgArr = [];
 
@@ -170,7 +228,7 @@ function App() {
         for (let i = 0; i < files.length; i++) {
             formData.append("file", files[i]);
             formData.append("fileName", files[i].name);
-            formData.append("params", '{"debug": 0}');
+            formData.append("params", '{"debug": 1}');
 
             imgArr[i] = { key: files[i].name, name: files[i].name, url: URL.createObjectURL(files[i]), text: "" };
         }
@@ -178,7 +236,7 @@ function App() {
         const config = {
             headers: {
                 "content-type": "multipart/form-data",
-                Authorization: "c5ec0b461153ff993f8d1160ad032428c6f458c0",
+                Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
             },
         };
 
@@ -194,36 +252,46 @@ function App() {
                 i += 1;
             }
             setUploads(imgArr);
+            setTextMessage("");
         });
     }
 
     function handleFileSelect(e) {
         e.preventDefault();
-        console.log("You selected files.");
+        console.log("You selected files on the OCR form.");
         setFiles(e.target.files);
     }
 
+    function handleSystemSelect(e) {
+        e.preventDefault();
+        console.log("You chose a system.");
+        setSystem(e.target.value);
+    }
+
+    return (
+        <Container>
+            <Row className="justify-content-center">
+                <Col xs="auto">
+                    <OCRForm handleSubmit={handleSubmit} handleFileSelect={handleFileSelect} handleSystemSelect={handleSystemSelect} />
+                </Col>
+            </Row>
+            <Row className="justify-content-center fs-5 text-danger">
+                {textMessage}
+            </Row>
+            <DisplayImages imgUploads={imgUploads} />
+        </Container>
+    );
+}
+
+function App() {
     return (
         <div className="App">
             <Tabs defaultActiveKey="ocr" transition={false} id="uncontrolled-tab" className="mb-3">
                 <Tab eventKey="ocr" title="Off-the-shelf OCR">
-                    <Container>
-                        <Row className="justify-content-center">
-                            <Col xs="auto">
-                                <OCRForm handleSubmit={handleSubmit} handleFileSelect={handleFileSelect} />
-                            </Col>
-                        </Row>
-                        <DisplayImages imgUploads={imgUploads} />
-                    </Container>
+                    <OCR></OCR>
                 </Tab>
-                <Tab eventKey="post" title="Post-correction">
-                    <Container>
-                        <Row className="justify-content-center">
-                            <Col xs="auto">
-                                <PostCorrForm handleSubmit={handleSubmit} handleFileSelect={handleFileSelect} />
-                            </Col>
-                        </Row>
-                    </Container>
+                <Tab eventKey="post" title="Automatic Post-correction">
+                    <PostCorr></PostCorr>
                 </Tab>
             </Tabs>
         </div>
@@ -231,3 +299,4 @@ function App() {
 }
 
 export default App;
+
