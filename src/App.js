@@ -101,6 +101,12 @@ function OCRForm(props) {
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
+                    <Form.Group controlId="emailAddress">
+                        <Form.Control type="email" onChange={props.handleEmailChange} required={true}/>
+                        <Form.Label className="mt-2">Email Address</Form.Label>
+                    </Form.Group>
+                </Col>
+                <Col xs="auto">
                     <Button variant="primary" type="submit">
                         Upload
                     </Button>
@@ -313,9 +319,11 @@ function PostCorrTraining() {
 function OCR() {
     const [files, setFiles] = useState();
     const [imgUploads, setUploads] = useState();
+    const [email, setEmail] = useState();
     const [textMessage, setTextMessage] = useState();
     const [ocrSystem, setSystem] = useState("google"); // ocrSystem variable is updated with the form, but not used in processing. It can be used for adding systems in the future.
-    const url = "http://rabat.sp.cs.cmu.edu:8088/annotator/ocr-post-correction/";
+    //const url = "http://rabat.sp.cs.cmu.edu:8088/annotator/ocr-post-correction/";
+    var url = "http://localhost:8088/annotator/ocr-post-correction/";
 
     function handleSubmit(e) {
         e.preventDefault();
@@ -327,18 +335,31 @@ function OCR() {
 
         const formData = new FormData();
 
+        if (window.submit_url !== undefined) {
+            url = window.submit_url
+        }
+
+        if (window.debug === undefined) {
+            window.debug = 1;
+        }
+        formData.append("params", '{"debug": ' + window.debug + '}');
+        formData.append("email", email);
         for (let i = 0; i < files.length; i++) {
             formData.append("file", files[i]);
             formData.append("fileName", files[i].name);
-            formData.append("params", '{"debug": 1}');
 
             imgArr[i] = { key: files[i].name, name: files[i].name, url: URL.createObjectURL(files[i]), text: "" };
         }
 
+        var auth_token = "8470ede027588b80c5b82ab5c9e78b8daea68635";
+        if (window.auth_token !== undefined) {
+            auth_token = window.auth_token
+        }
         const config = {
             headers: {
                 "content-type": "multipart/form-data",
-                Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
+                //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
+                Authorization: auth_token,
             },
         };
 
@@ -370,11 +391,17 @@ function OCR() {
         setSystem(e.target.value);
     }
 
+    function handleEmailChange(e) {
+        e.preventDefault();
+        console.log("Email address updated");
+        setEmail(e.target.value);
+    }
+
     return (
         <Container>
             <Row className="justify-content-center">
                 <Col xs="auto">
-                    <OCRForm handleSubmit={handleSubmit} handleFileSelect={handleFileSelect} handleSystemSelect={handleSystemSelect} />
+                    <OCRForm handleSubmit={handleSubmit} handleFileSelect={handleFileSelect} handleSystemSelect={handleSystemSelect} handleEmailChange={handleEmailChange}/>
                 </Col>
             </Row>
             <Row className="justify-content-center fs-5 text-danger">
