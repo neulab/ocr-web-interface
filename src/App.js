@@ -366,16 +366,19 @@ function OCR() {
         axios.post(url, formData, config).then((response) => {
             console.log(response.data);
 
-            let i = 0;
-
-            for (let key in response.data) {
-                // response.data[key] = "Test\nTest\nTest" + key;
-                let value = response.data[key];
-                imgArr[i]["text"] = value;
-                i += 1;
+            if (Array.isArray(response.data)) {
+                setTextMessage(JSON.stringify(response.data));
+            } else {
+                let i = 0;
+                for (let key in response.data) {
+                    // response.data[key] = "Test\nTest\nTest" + key;
+                    let value = response.data[key];
+                    imgArr[i]["text"] = value;
+                    i += 1;
+                }
+                setUploads(imgArr);
+                setTextMessage("");
             }
-            setUploads(imgArr);
-            setTextMessage("");
         });
     }
 
