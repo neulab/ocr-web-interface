@@ -153,14 +153,20 @@ function PostCorrTrainingForm(props) {
         <Form className="my-5" onSubmit={props.handleSubmit}>
             <Row>
                 <Col xs="auto">
-                    <Form.Group controlId="trainData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleLabeledFileSelect} required={true}/>
-                        <Form.Label className="mt-2">Training Data</Form.Label>
+                    <Form.Group controlId="sourceData">
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleSourceFileSelect} required={true}/>
+                        <Form.Label className="mt-2">Source Data</Form.Label>
+                    </Form.Group>
+                </Col>
+                <Col xs="auto">
+                    <Form.Group controlId="targetData">
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleTargetFileSelect} required={true}/>
+                        <Form.Label className="mt-2">Target Data</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="unlabeledData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} />
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} required={true}/>
                         <Form.Label className="mt-2">Unlabeled Data</Form.Label>
                     </Form.Group>
                 </Col>
@@ -249,7 +255,8 @@ function PostCorrInference() {
 }
 
 function PostCorrTraining() {
-    const [labeledFiles, setLabeledFiles] = useState();
+    const [sourceFiles, setSourceFiles] = useState();
+    const [targetFiles, setTargetFiles] = useState();
     const [unlabeledFiles, setUnlabeledFiles] = useState();
     const [email, setEmail] = useState();
     const [textMessage, setTextMessage] = useState();
@@ -260,23 +267,62 @@ function PostCorrTraining() {
 
         // Add code to send labeledFiles, unlabeledFiles, email to the backend and get monitoring URL.
 
-        const url = "toy_monitoring_url/job_id"
+        if (window.cmulab_domain === undefined) {
+            window.cmulab_domain = "http://localhost:8088"
+        }
+        var url = window.cmulab_domain + "/annotator/train_single_source_ocr/";
 
-        setTextMessage(<><p className="mb-0" key="0">
-                Training data submitted!
-                </p>
-                <p className="mb-0" key="1">
-                Monitor the status of your model training job <a href={url}>here</a>.
-                </p>
-                <p className="mb-0" key="2">
-                When training is complete, an email with the link to download the model will be sent to your email address.
-                </p></>);
+        const formData = new FormData();
+        formData.append("email", email);
+        for (let i = 0; i < sourceFiles.length; i++) {
+            formData.append("srcData", sourceFiles[i]);
+        }
+        for (let i = 0; i < targetFiles.length; i++) {
+            formData.append("tgtData", targetFiles[i]);
+        }
+        for (let i = 0; i < unlabeledFiles.length; i++) {
+            formData.append("unlabeledData", unlabeledFiles[i]);
+        }
+
+        var auth_token = "8470ede027588b80c5b82ab5c9e78b8daea68635";
+        if (window.auth_token !== undefined) {
+            auth_token = window.auth_token
+        }
+        const config = {
+            headers: {
+                "content-type": "multipart/form-data",
+                //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
+                Authorization: auth_token,
+            },
+        };
+
+        axios.post(url, formData, config).then((response) => {
+            console.log(response.data);
+
+            setTextMessage(<><p className="mb-0" key="0">
+                    Training data submitted!
+                    </p>
+                    <p className="mb-0" key="1">
+                    Monitor the status of your model training job <a href={url}>here</a>.
+                    </p>
+                    <p className="mb-0" key="2">
+                    When training is complete, an email with the link to download the model will be sent to your email address.
+                    </p></>);
+            setTextMessage(JSON.stringify(response.data));
+        });
+
     }
 
-    function handleLabeledFileSelect(e) {
+    function handleSourceFileSelect(e) {
         e.preventDefault();
-        console.log("You selected labeled data files on the post-correction training form.");
-        setLabeledFiles(e.target.files);
+        console.log("You selected source data files on the post-correction training form.");
+        setSourceFiles(e.target.files);
+    }
+
+    function handleTargetFileSelect(e) {
+        e.preventDefault();
+        console.log("You selected target data files on the post-correction training form.");
+        setTargetFiles(e.target.files);
     }
 
     function handleUnlabeledFileSelect(e) {
@@ -301,7 +347,12 @@ function PostCorrTraining() {
                             <Container>
                                 <Row className="justify-content-center">
                                     <Col xs="auto">
-                                        <PostCorrTrainingForm handleSubmit={handleSubmit} handleLabeledFileSelect={handleLabeledFileSelect} handleUnlabeledFileSelect={handleUnlabeledFileSelect} handleEmailChange={handleEmailChange} />
+                                        <PostCorrTrainingForm 
+                                        handleSubmit={handleSubmit}
+                                        handleSourceFileSelect={handleSourceFileSelect} 
+                                        handleTargetFileSelect={handleTargetFileSelect} 
+                                        handleUnlabeledFileSelect={handleUnlabeledFileSelect}
+                                        handleEmailChange={handleEmailChange} />
                                     </Col>
                                 </Row>
                                 <Row className="justify-content-center text-success">
@@ -322,8 +373,6 @@ function OCR() {
     const [email, setEmail] = useState();
     const [textMessage, setTextMessage] = useState();
     const [ocrSystem, setSystem] = useState("google"); // ocrSystem variable is updated with the form, but not used in processing. It can be used for adding systems in the future.
-    //const url = "http://rabat.sp.cs.cmu.edu:8088/annotator/ocr-post-correction/";
-    var url = "http://localhost:8088/annotator/ocr-post-correction/";
 
     function handleSubmit(e) {
         e.preventDefault();
@@ -335,9 +384,10 @@ function OCR() {
 
         const formData = new FormData();
 
-        if (window.submit_url !== undefined) {
-            url = window.submit_url
+        if (window.cmulab_domain === undefined) {
+            window.cmulab_domain = "http://localhost:8088"
         }
+        var url = window.cmulab_domain + "/annotator/ocr-post-correction/";
 
         if (window.debug === undefined) {
             window.debug = 1;
