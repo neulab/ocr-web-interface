@@ -121,15 +121,15 @@ function PostCorrInferenceForm(props) {
         <Form className="my-5" onSubmit={props.handleSubmit}>
             <Row>
                 <Col xs="auto">
-                    <Form.Group controlId="trainData">
-                        <Form.Control type="file" onChange={props.handleModelFileSelect} required={true}/>
-                        <Form.Label className="mt-2">Model File</Form.Label>
+                    <Form.Group controlId="testData">
+                        <Form.Control type="file" onChange={props.handleTestDataSelect} required={true}/>
+                        <Form.Label className="mt-2">Test data (text file)</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
-                    <Form.Group controlId="unlabeledData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} required={true}/>
-                        <Form.Label className="mt-2">First-pass OCR</Form.Label>
+                    <Form.Group controlId="modelId">
+                        <Form.Control type="text" onChange={props.handleModelIDChange} required={true}/>
+                        <Form.Label className="mt-2">Model ID</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
@@ -187,8 +187,8 @@ function PostCorrTrainingForm(props) {
 }
 
 function PostCorrInference() {
-    const [modelFile, setModelFile] = useState();
-    const [unlabeledFiles, setUnlabeledFiles] = useState();
+    const [testData, setTestData] = useState();
+    const [modelID, setModelID] = useState();
     const [email, setEmail] = useState();
     const [textMessage, setTextMessage] = useState();
 
@@ -198,29 +198,55 @@ function PostCorrInference() {
 
         // Add code to send modelFile, unlabeledFiles, email to the backend and get monitoring URL.
 
-        const url = "toy_monitoring_url/job_id"
+        if (window.cmulab_domain === undefined) {
+            window.cmulab_domain = "http://localhost:8088"
+        }
+        var url = window.cmulab_domain + "/annotator/test_single_source_ocr/";
 
-        setTextMessage(<><p className="mb-0" key="0">
-                Post-correction job submitted!
-                </p>
-                <p className="mb-0" key="1">
-                Monitor the status of your job <a href={url}>here</a>.
-                </p>
-                <p className="mb-0" key="2">
-                When the job is complete, an email with the link to download the post-corrected text files will be sent to your email address.
-                </p></>);
+        const formData = new FormData();
+        formData.append("email", email);
+        formData.append("model_id", modelID);
+        for (let i = 0; i < testData.length; i++) {
+            formData.append("testData", testData[i]);
+        }
+
+        var auth_token = "8470ede027588b80c5b82ab5c9e78b8daea68635";
+        if (window.auth_token !== undefined) {
+            auth_token = window.auth_token
+        }
+        const config = {
+            headers: {
+                "content-type": "multipart/form-data",
+                //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
+                Authorization: auth_token,
+            },
+        };
+
+        axios.post(url, formData, config).then((response) => {
+            console.log(response.data);
+            setTextMessage(<><p className="mb-0" key="0">
+                    Post-correction job submitted!
+                    </p>
+                    <p className="mb-0" key="1">
+                    Monitor the status of your job <a href={url}>here</a>.
+                    </p>
+                    <p className="mb-0" key="2">
+                    When the job is complete, an email with the link to download the post-corrected text files will be sent to your email address.
+                    </p></>);
+            setTextMessage(JSON.stringify(response.data));
+        });
 }
 
-    function handleModelFileSelect(e) {
+    function handleModelIDChange(e) {
         e.preventDefault();
-        console.log("You selected model file on the post-correction inference form.");
-        setModelFile(e.target.files);
+        console.log("model ID changed");
+        setModelID(e.target.value);
     }
 
-    function handleUnlabeledFileSelect(e) {
+    function handleTestDataSelect(e) {
         e.preventDefault();
         console.log("You selected unlabeled data files on the post-correction inference form.");
-        setUnlabeledFiles(e.target.files);
+        setTestData(e.target.files);
     }
 
     function handleEmailChange(e) {
@@ -239,7 +265,10 @@ function PostCorrInference() {
                             <Container>
                                 <Row className="justify-content-center">
                                     <Col xs="auto">
-                                        <PostCorrInferenceForm handleSubmit={handleSubmit} handleModelFileSelect={handleModelFileSelect} handleUnlabeledFileSelect={handleUnlabeledFileSelect} handleEmailChange={handleEmailChange} />
+                                        <PostCorrInferenceForm handleSubmit={handleSubmit}
+                                         handleModelIDChange={handleModelIDChange}
+                                         handleTestDataSelect={handleTestDataSelect}
+                                         handleEmailChange={handleEmailChange} />
                                     </Col>
                                 </Row>
                                 <Row className="justify-content-center text-success">
