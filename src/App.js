@@ -202,9 +202,6 @@ function PostCorrInference() {
 
         // Add code to send modelFile, unlabeledFiles, email to the backend and get monitoring URL.
 
-        if (window.cmulab_domain === undefined) {
-            window.cmulab_domain = "http://localhost:8088"
-        }
         var url = window.cmulab_domain + "/annotator/test_single_source_ocr/";
 
         const formData = new FormData();
@@ -214,15 +211,11 @@ function PostCorrInference() {
             formData.append("testData", testData[i]);
         }
 
-        var auth_token = "8470ede027588b80c5b82ab5c9e78b8daea68635";
-        if (window.auth_token !== undefined) {
-            auth_token = window.auth_token
-        }
         const config = {
             headers: {
                 "content-type": "multipart/form-data",
                 //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
-                Authorization: auth_token,
+                Authorization: window.auth_token,
             },
         };
 
@@ -301,9 +294,6 @@ function PostCorrTraining() {
 
         // Add code to send labeledFiles, unlabeledFiles, email to the backend and get monitoring URL.
 
-        if (window.cmulab_domain === undefined) {
-            window.cmulab_domain = "http://localhost:8088"
-        }
         var url = window.cmulab_domain + "/annotator/train_single_source_ocr/";
 
         const formData = new FormData();
@@ -318,15 +308,11 @@ function PostCorrTraining() {
             formData.append("unlabeledData", unlabeledFiles[i]);
         }
 
-        var auth_token = "8470ede027588b80c5b82ab5c9e78b8daea68635";
-        if (window.auth_token !== undefined) {
-            auth_token = window.auth_token
-        }
         const config = {
             headers: {
                 "content-type": "multipart/form-data",
                 //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
-                Authorization: auth_token,
+                Authorization: window.auth_token,
             },
         };
 
@@ -419,9 +405,6 @@ function OCR() {
 
         const formData = new FormData();
 
-        if (window.cmulab_domain === undefined) {
-            window.cmulab_domain = "http://localhost:8088"
-        }
         var url = window.cmulab_domain + "/annotator/ocr-post-correction/";
 
         if (window.debug === undefined) {
@@ -436,15 +419,11 @@ function OCR() {
             imgArr[i] = { key: files[i].name, name: files[i].name, url: URL.createObjectURL(files[i]), text: "" };
         }
 
-        var auth_token = "8470ede027588b80c5b82ab5c9e78b8daea68635";
-        if (window.auth_token !== undefined) {
-            auth_token = window.auth_token
-        }
         const config = {
             headers: {
                 "content-type": "multipart/form-data",
                 //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
-                Authorization: auth_token,
+                Authorization: window.auth_token,
             },
         };
 
@@ -503,7 +482,9 @@ function OCR() {
 function Settings() {
     const { email, setEmail } = React.useContext(AppContext);
     const [authToken, setAuthToken] = useState("8470ede027588b80c5b82ab5c9e78b8daea68635");
+    window.auth_token = authToken;
     const [cmulabDomain, setCmulabDomain] = useState("http://localhost:8088");
+    window.cmulab_domain = cmulabDomain;
     const [textMessage, setTextMessage] = useState();
 
     function handleSubmit(e) {
