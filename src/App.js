@@ -221,17 +221,18 @@ function PostCorrInference() {
 
         axios.post(url, formData, config).then((response) => {
             console.log(response.data);
+            let log_file = response.data;
             setTextMessage(<><p className="mb-0" key="0">
                     Post-correction job submitted!
                     </p>
                     <p className="mb-0" key="1">
-                    Monitor the status of your job <a href={url}>here</a>.
+                    You can monitor the status <a target="_blank" href={log_file}>here</a>.
                     </p>
                     <p className="mb-0" key="2">
-                    When the job is complete, an email with the link to download the post-corrected text files will be sent to your email address.
+                    When processing is complete, an email will be sent to {window.email}.
                     </p></>);
-            setTextMessage(JSON.stringify(response.data));
-        });
+            //setTextMessage(JSON.stringify(response.data));
+        }).catch( function (error) { setTextMessage(error.message); });
 }
 
     function handleModelIDChange(e) {
@@ -318,18 +319,20 @@ function PostCorrTraining() {
 
         axios.post(url, formData, config).then((response) => {
             console.log(response.data);
+            let log_file = response.data[0]["log_file"]
+            let model_id = response.data[0]["model_id"]
 
             setTextMessage(<><p className="mb-0" key="0">
-                    Training data submitted!
+                    Training data submitted, the new model ID is <b>{model_id}</b>
                     </p>
                     <p className="mb-0" key="1">
-                    Monitor the status of your model training job <a href={url}>here</a>.
+                    You can monitor the status <a target="_blank" href={log_file}>here</a>.
                     </p>
                     <p className="mb-0" key="2">
-                    When training is complete, an email with the link to download the model will be sent to your email address.
+                    When training is complete, an email will be sent to {window.email}.
                     </p></>);
-            setTextMessage(JSON.stringify(response.data));
-        });
+            //setTextMessage(JSON.stringify(response.data));
+        }).catch( function (error) { setTextMessage(error.message); });
 
     }
 
@@ -432,6 +435,18 @@ function OCR() {
 
             if (Array.isArray(response.data)) {
                 setTextMessage(JSON.stringify(response.data));
+                let job_id = response.data[0]["job_id"];
+                let status_url = response.data[0]["status_url"];
+                let status = response.data[0]["status"];
+                setTextMessage(<><p className="mb-0" key="0">
+                        Files uploaded successfully and task has been queued!
+                        </p>
+                        <p className="mb-0" key="1">
+                        You can monitor the status <a target="_blank" href={status_url}>here</a>.
+                        </p>
+                        <p className="mb-0" key="2">
+                        When training is complete, an email will be sent to {window.email}.
+                        </p></>);
             } else {
                 let i = 0;
                 for (let key in response.data) {
@@ -443,7 +458,7 @@ function OCR() {
                 setUploads(imgArr);
                 setTextMessage("");
             }
-        });
+        }).catch( function (error) { setTextMessage(error.message); });
     }
 
     function handleFileSelect(e) {
