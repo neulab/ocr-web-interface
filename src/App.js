@@ -85,6 +85,7 @@ function DisplayImages(props) {
 }
 
 function OCRForm(props) {
+    const { email, setEmail } = React.useContext(AppContext);
     return (
         <Form className="my-5" onSubmit={props.handleSubmit}>
             <Row>
@@ -102,7 +103,7 @@ function OCRForm(props) {
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="emailAddress">
-                        <Form.Control type="email" onChange={props.handleEmailChange} required={true}/>
+                        <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
                         <Form.Label className="mt-2">Email Address</Form.Label>
                     </Form.Group>
                 </Col>
@@ -117,6 +118,7 @@ function OCRForm(props) {
 }
 
 function PostCorrInferenceForm(props) {
+    const { email, setEmail } = React.useContext(AppContext);
     return (
         <Form className="my-5" onSubmit={props.handleSubmit}>
             <Row>
@@ -134,7 +136,7 @@ function PostCorrInferenceForm(props) {
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="emailAddress">
-                        <Form.Control type="email" onChange={props.handleEmailChange} required={true}/>
+                        <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
                         <Form.Label className="mt-2">Email Address</Form.Label>
                     </Form.Group>
                 </Col>
@@ -149,6 +151,7 @@ function PostCorrInferenceForm(props) {
 }
 
 function PostCorrTrainingForm(props) {
+    const { email, setEmail } = React.useContext(AppContext);
     return (
         <Form className="my-5" onSubmit={props.handleSubmit}>
             <Row>
@@ -172,7 +175,7 @@ function PostCorrTrainingForm(props) {
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="emailAddress">
-                        <Form.Control type="email" onChange={props.handleEmailChange} required={true}/>
+                        <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
                         <Form.Label className="mt-2">Email Address</Form.Label>
                     </Form.Group>
                 </Col>
@@ -189,7 +192,8 @@ function PostCorrTrainingForm(props) {
 function PostCorrInference() {
     const [testData, setTestData] = useState();
     const [modelID, setModelID] = useState();
-    const [email, setEmail] = useState();
+    //const [email, setEmail] = useState();
+    const { email, setEmail } = React.useContext(AppContext);
     const [textMessage, setTextMessage] = useState();
 
     function handleSubmit(e) {
@@ -252,7 +256,7 @@ function PostCorrInference() {
     function handleEmailChange(e) {
         e.preventDefault();
         console.log("Email address updated");
-        setEmail(e.target.value);
+        setEmail(e.target.value.trim());
     }
 
     return (
@@ -287,7 +291,8 @@ function PostCorrTraining() {
     const [sourceFiles, setSourceFiles] = useState();
     const [targetFiles, setTargetFiles] = useState();
     const [unlabeledFiles, setUnlabeledFiles] = useState();
-    const [email, setEmail] = useState();
+    //const [email, setEmail] = useState();
+    const { email, setEmail } = React.useContext(AppContext);
     const [textMessage, setTextMessage] = useState();
 
     function handleSubmit(e) {
@@ -363,7 +368,7 @@ function PostCorrTraining() {
     function handleEmailChange(e) {
         e.preventDefault();
         console.log("Email address updated");
-        setEmail(e.target.value);
+        setEmail(e.target.value.trim());
     }
 
     return (
@@ -399,7 +404,8 @@ function PostCorrTraining() {
 function OCR() {
     const [files, setFiles] = useState();
     const [imgUploads, setUploads] = useState();
-    const [email, setEmail] = useState();
+    //const [email, setEmail] = useState();
+    const { email, setEmail } = React.useContext(AppContext);
     const [textMessage, setTextMessage] = useState();
     const [ocrSystem, setSystem] = useState("google"); // ocrSystem variable is updated with the form, but not used in processing. It can be used for adding systems in the future.
 
@@ -476,7 +482,7 @@ function OCR() {
     function handleEmailChange(e) {
         e.preventDefault();
         console.log("Email address updated");
-        setEmail(e.target.value);
+        setEmail(e.target.value.trim());
     }
 
     return (
@@ -486,7 +492,7 @@ function OCR() {
                     <OCRForm handleSubmit={handleSubmit} handleFileSelect={handleFileSelect} handleSystemSelect={handleSystemSelect} handleEmailChange={handleEmailChange}/>
                 </Col>
             </Row>
-            <Row className="justify-content-center fs-5 text-danger">
+            <Row className="justify-content-center fs-5 text-success">
                 {textMessage}
             </Row>
             <DisplayImages imgUploads={imgUploads} />
@@ -494,19 +500,114 @@ function OCR() {
     );
 }
 
-function App() {
+function Settings() {
+    const { email, setEmail } = React.useContext(AppContext);
+    const [authToken, setAuthToken] = useState("8470ede027588b80c5b82ab5c9e78b8daea68635");
+    const [cmulabDomain, setCmulabDomain] = useState("http://localhost:8088");
+    const [textMessage, setTextMessage] = useState();
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        console.log("You saved settings.");
+        window.email = email;
+        window.auth_token = authToken;
+        window.cmulab_domain = cmulabDomain;
+        setTextMessage("Settings saved!");
+    }
+
+    function handleEmailChange(e) {
+        e.preventDefault();
+        console.log("Email address updated");
+        setEmail(e.target.value.trim());
+    }
+
+    function handleAuthTokenChange(e) {
+        e.preventDefault();
+        console.log("Email address updated");
+        setAuthToken(e.target.value.trim());
+    }
+
+    function handleCmulabDomainChange(e) {
+        e.preventDefault();
+        console.log("Email address updated");
+        setCmulabDomain(e.target.value.trim().replace(/\/+$/, ""));
+    }
+
+
     return (
+        <Container>
+            <Row className="justify-content-center">
+                <Col xs="auto">
+                    <SettingsForm handleSubmit={handleSubmit}
+                    authToken={authToken}
+                    handleAuthTokenChange={handleAuthTokenChange}
+                    cmulabDomain={cmulabDomain}
+                    handleCmulabDomainChange={handleCmulabDomainChange}
+                    handleEmailChange={handleEmailChange}/>
+                </Col>
+            </Row>
+            <Row className="justify-content-center fs-5 text-success">
+                {textMessage}
+            </Row>
+        </Container>
+    );
+}
+
+function SettingsForm(props) {
+    const { email, setEmail } = React.useContext(AppContext);
+    return (
+        <Form className="my-5" onSubmit={props.handleSubmit}>
+            <Row>
+                <Col xs="auto">
+                    <Form.Group controlId="emailAddress">
+                        <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
+                        <Form.Label className="mt-2">Email Address</Form.Label>
+                    </Form.Group>
+                </Col>
+                <Col xs="auto">
+                    <Form.Group controlId="authToken">
+                        <Form.Control type="text" onChange={props.handleAuthTokenChange} required={true} defaultValue={props.authToken}/>
+                        <Form.Label className="mt-2">Auth Token</Form.Label>
+                    </Form.Group>
+                </Col>
+                <Col xs="auto">
+                    <Form.Group controlId="cmulabDoman">
+                        <Form.Control type="text" onChange={props.handleCmulabDomainChange} required={true} defaultValue={props.cmulabDomain}/>
+                        <Form.Label className="mt-2">CMULAB domain</Form.Label>
+                    </Form.Group>
+                </Col>
+                <Col xs="auto">
+                    <Button variant="primary" type="submit">
+                        Save
+                    </Button>
+                </Col>
+            </Row>
+        </Form>
+    );
+}
+
+const AppContext = React.createContext();
+
+function App() {
+    const [email, setEmail] = useState();
+
+    return (
+        <AppContext.Provider value={{ email, setEmail }}>
         <div className="App">
-            <Tabs defaultActiveKey="ocr" transition={false} id="uncontrolled-tab" className="mb-3">
-                <Tab eventKey="ocr" title="Off-the-shelf OCR">
+            <Tabs defaultActiveKey="settings" transition={false} id="uncontrolled-tab" className="mb-3">
+                <Tab eventKey="settings" title="1. Settings">
+                    <Settings></Settings>
+                </Tab>
+                <Tab eventKey="ocr" title="2. Off-the-shelf OCR">
                     <OCR></OCR>
                 </Tab>
-                <Tab eventKey="post" title="Automatic Post-correction">
+                <Tab eventKey="post" title="3. Automatic Post-correction">
                     <PostCorrTraining></PostCorrTraining>
                     <PostCorrInference></PostCorrInference>
                 </Tab>
             </Tabs>
         </div>
+        </AppContext.Provider>
     );
 }
 
