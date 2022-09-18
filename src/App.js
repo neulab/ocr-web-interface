@@ -205,6 +205,10 @@ function PostCorrInference() {
         var url = window.cmulab_domain + "/annotator/test_single_source_ocr/";
 
         const formData = new FormData();
+        var params = {
+            "debug": window.debug
+        }
+        formData.append("params", JSON.stringify(params));
         formData.append("email", email);
         formData.append("model_id", modelID);
         for (let i = 0; i < testData.length; i++) {
@@ -298,6 +302,10 @@ function PostCorrTraining() {
         var url = window.cmulab_domain + "/annotator/train_single_source_ocr/";
 
         const formData = new FormData();
+        var params = {
+            "debug": window.debug
+        }
+        formData.append("params", JSON.stringify(params));
         formData.append("email", email);
         for (let i = 0; i < sourceFiles.length; i++) {
             formData.append("srcData", sourceFiles[i]);
@@ -410,10 +418,10 @@ function OCR() {
 
         var url = window.cmulab_domain + "/annotator/ocr-post-correction/";
 
-        if (window.debug === undefined) {
-            window.debug = 1;
+        var params = {
+            "debug": window.debug
         }
-        formData.append("params", '{"debug": ' + window.debug + '}');
+        formData.append("params", JSON.stringify(params));
         formData.append("email", email);
         for (let i = 0; i < files.length; i++) {
             formData.append("file", files[i]);
@@ -551,6 +559,8 @@ function Settings() {
 
 function SettingsForm(props) {
     const { email, setEmail } = React.useContext(AppContext);
+    let auth_token_url = props.cmulabDomain + "/annotator/get_auth_token/";
+
     return (
         <Form className="my-5" onSubmit={props.handleSubmit}>
             <Row>
@@ -565,6 +575,7 @@ function SettingsForm(props) {
                         <Form.Control type="text" onChange={props.handleAuthTokenChange} required={true} defaultValue={props.authToken}/>
                         <Form.Label className="mt-2">Auth Token</Form.Label>
                     </Form.Group>
+                    Get an Auth Token <a target="_blank" href={auth_token_url}>here</a>
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="cmulabDoman">
@@ -585,7 +596,11 @@ function SettingsForm(props) {
 const AppContext = React.createContext();
 
 function App() {
+    console.log("Loading App...");
     const [email, setEmail] = useState();
+    if (window.debug === undefined) {
+        window.debug = 0;
+    }
 
     return (
         <AppContext.Provider value={{ email, setEmail }}>
