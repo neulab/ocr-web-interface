@@ -453,7 +453,7 @@ function OCR() {
                         You can monitor the status <a target="_blank" href={status_url}>here</a>.
                         </p>
                         <p className="mb-0" key="2">
-                        When training is complete, an email will be sent to {window.email}.
+                        When recognition is complete, an email will be sent to {window.email}.
                         </p></>);
             } else {
                 let i = 0;
