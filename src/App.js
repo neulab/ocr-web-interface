@@ -10,6 +10,8 @@ import Tab from "react-bootstrap/Tab";
 import Tabs from "react-bootstrap/Tabs";
 import React, { useState } from "react";
 import axios from "axios";
+import * as JSZip from 'jszip';
+
 
 function NewlineText(props) {
     const text = props.text;
@@ -56,21 +58,28 @@ function DisplayImages(props) {
     }
 
     function handleDownload(imgUploads) {
+        var zip = new JSZip();
         let elements = [];
         for (let i = 0; i < imgUploads.length; i++) {
-            const element = document.createElement("a");
-            const file = new Blob([imgUploads[i]["text"]], { type: "text/plain" });
-            element.href = URL.createObjectURL(file);
-            element.download = imgUploads[i]["key"].replace("png", "txt");
-            elements[i] = element;
+            zip.file(imgUploads[i]["key"].replace("png", "txt"), imgUploads[i]["text"]);
+            // const element = document.createElement("a");
+            // const file = new Blob([imgUploads[i]["text"]], { type: "text/plain" });
+            // element.href = URL.createObjectURL(file);
+            // element.download = imgUploads[i]["key"].replace("png", "txt");
+            // elements[i] = element;
         }
         console.log(elements);
 
+        /*
         for (let i = 0; i < elements.length; i++) {
             document.body.appendChild(elements[i]);
             elements[i].click();
             document.body.removeChild(elements[i]);
         }
+        */
+        zip.generateAsync({ type: "base64" }).then(function (base64) {
+            window.location.href = "data:application/zip;base64," + base64;
+        });
         console.log("done");
     }
 
