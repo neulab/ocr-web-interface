@@ -207,6 +207,7 @@ function PostCorrInference() {
 
     function handleSubmit(e) {
         e.preventDefault();
+        setTextMessage("Uploading...");
         console.log("You clicked upload on the post-correction prediction form.");
 
         // Add code to send modelFile, unlabeledFiles, email to the backend and get monitoring URL.
@@ -304,6 +305,7 @@ function PostCorrTraining() {
 
     function handleSubmit(e) {
         e.preventDefault();
+        setTextMessage("Uploading...");
         console.log("You clicked upload on the post-correction training form.");
 
         // Add code to send labeledFiles, unlabeledFiles, email to the backend and get monitoring URL.
@@ -525,7 +527,18 @@ function Settings() {
         window.email = email;
         window.auth_token = authToken;
         window.cmulab_domain = cmulabDomain;
-        setTextMessage("Settings saved!");
+        setTextMessage(<><p className="mb-0" key="0">
+                Settings saved!
+                </p>
+                <p className="mb-0" key="1">
+                    <small>Email: {email}</small>
+                </p>
+                <p className="mb-0" key="2">
+                    <small>Auth Token: {authToken}</small>
+                </p>
+                <p className="mb-0" key="3">
+                    <small>CMULAB domain: {cmulabDomain}</small>
+                </p></>);
     }
 
     function handleEmailChange(e) {
