@@ -230,6 +230,7 @@ function PostCorrInference() {
                 "content-type": "multipart/form-data",
                 //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
                 Authorization: window.auth_token,
+                "X-CSRFToken": window.csrf_token,
             },
         };
 
@@ -333,6 +334,7 @@ function PostCorrTraining() {
                 "content-type": "multipart/form-data",
                 //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
                 Authorization: window.auth_token,
+                "X-CSRFToken": window.csrf_token,
             },
         };
 
@@ -446,6 +448,7 @@ function OCR() {
                 "content-type": "multipart/form-data",
                 //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
                 Authorization: window.auth_token,
+                "X-CSRFToken": window.csrf_token,
             },
         };
 
@@ -520,6 +523,25 @@ function Settings() {
     const [cmulabDomain, setCmulabDomain] = useState("http://localhost:8088");
     window.cmulab_domain = cmulabDomain;
     const [textMessage, setTextMessage] = useState();
+
+    axios.get("/annotator/get_auth_token/").then((response) => {
+        console.log(response);
+        if (response.status === 401) {
+            window.location.href = "/accounts/login/?next=/static/ocr-web-interface/index.html";
+        }
+        setEmail(response.data.email);
+        window.email = response.data.email;
+        setAuthToken(response.data.auth_token);
+        window.auth_token = response.data.auth_token;
+        setCmulabDomain("");
+        window.cmulab_domain = "";
+        window.csrf_token = response.data.csrf_token;
+    }).catch( function (error) { 
+        console.log(error);
+        if (error.response.status === 401) {
+        window.location.href = "/accounts/login/?next=/static/ocr-web-interface/index.html";
+        }
+    });
 
     function handleSubmit(e) {
         e.preventDefault();
@@ -627,14 +649,14 @@ function App() {
     return (
         <AppContext.Provider value={{ email, setEmail }}>
         <div className="App">
-            <Tabs defaultActiveKey="settings" transition={false} id="uncontrolled-tab" className="mb-3">
-                <Tab eventKey="settings" title="1. Settings">
+            <Tabs defaultActiveKey="ocr" transition={false} id="uncontrolled-tab" className="mb-3">
+                <Tab eventKey="settings" title="Settings">
                     <Settings></Settings>
                 </Tab>
-                <Tab eventKey="ocr" title="2. Off-the-shelf OCR">
+                <Tab eventKey="ocr" title="1. Off-the-shelf OCR">
                     <OCR></OCR>
                 </Tab>
-                <Tab eventKey="post" title="3. Automatic Post-correction">
+                <Tab eventKey="post" title="2. Automatic Post-correction">
                     <PostCorrTraining></PostCorrTraining>
                     <PostCorrInference></PostCorrInference>
                 </Tab>
