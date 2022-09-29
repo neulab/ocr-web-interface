@@ -8,7 +8,7 @@ import Image from "react-bootstrap/Image";
 import Accordion from "react-bootstrap/Accordion";
 import Tab from "react-bootstrap/Tab";
 import Tabs from "react-bootstrap/Tabs";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import * as JSZip from 'jszip';
 
@@ -524,24 +524,27 @@ function Settings() {
     window.cmulab_domain = cmulabDomain;
     const [textMessage, setTextMessage] = useState();
 
-    axios.get("/annotator/get_auth_token/").then((response) => {
-        console.log(response);
-        if (response.status === 401) {
+    useEffect(()=>{
+        axios.get("/annotator/get_auth_token/").then((response) => {
+            console.log(response);
+            if (response.status === 401) {
+                window.location.href = "/accounts/login/?next=/static/ocr-web-interface/index.html";
+            }
+            setEmail(response.data.email);
+            window.email = response.data.email;
+            setAuthToken(response.data.auth_token);
+            window.auth_token = response.data.auth_token;
+            setCmulabDomain("");
+            window.cmulab_domain = "";
+            window.csrf_token = response.data.csrf_token;
+        }).catch( function (error) {
+            console.log(error);
+            if (error.response.status === 401) {
             window.location.href = "/accounts/login/?next=/static/ocr-web-interface/index.html";
-        }
-        setEmail(response.data.email);
-        window.email = response.data.email;
-        setAuthToken(response.data.auth_token);
-        window.auth_token = response.data.auth_token;
-        setCmulabDomain("");
-        window.cmulab_domain = "";
-        window.csrf_token = response.data.csrf_token;
-    }).catch( function (error) { 
-        console.log(error);
-        if (error.response.status === 401) {
-        window.location.href = "/accounts/login/?next=/static/ocr-web-interface/index.html";
-        }
-    });
+            }
+        });
+    }, []) // <-- empty dependency array
+
 
     function handleSubmit(e) {
         e.preventDefault();
