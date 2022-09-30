@@ -244,7 +244,7 @@ function PostCorrInference() {
                     You can monitor the status <a target="_blank" href={log_file}>here</a>.
                     </p>
                     <p className="mb-0" key="2">
-                    When processing is complete, an email will be sent to {window.email}.
+                    When processing is complete, an email will be sent to {email}.
                     </p></>);
             //setTextMessage(JSON.stringify(response.data));
         }).catch( function (error) { setTextMessage(error.message); });
@@ -350,7 +350,7 @@ function PostCorrTraining() {
                     You can monitor the status <a target="_blank" href={log_file}>here</a>.
                     </p>
                     <p className="mb-0" key="2">
-                    When training is complete, an email will be sent to {window.email}.
+                    When training is complete, an email will be sent to {email}.
                     </p></>);
             //setTextMessage(JSON.stringify(response.data));
         }).catch( function (error) { setTextMessage(error.message); });
@@ -467,7 +467,7 @@ function OCR() {
                         You can monitor the status <a target="_blank" href={status_url}>here</a>.
                         </p>
                         <p className="mb-0" key="2">
-                        When recognition is complete, an email will be sent to {window.email}.
+                        When recognition is complete, an email will be sent to {email}.
                         </p></>);
             } else {
                 let i = 0;
