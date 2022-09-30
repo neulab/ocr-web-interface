@@ -179,8 +179,8 @@ function PostCorrTrainingForm(props) {
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="unlabeledData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} required={true}/>
-                        <Form.Label className="mt-2">Unlabeled Data</Form.Label>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} required={false}/>
+                        <Form.Label className="mt-2">Unlabeled Data (optional)</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
@@ -300,7 +300,7 @@ function PostCorrInference() {
 function PostCorrTraining() {
     const [sourceFiles, setSourceFiles] = useState();
     const [targetFiles, setTargetFiles] = useState();
-    const [unlabeledFiles, setUnlabeledFiles] = useState();
+    const [unlabeledFiles, setUnlabeledFiles] = useState([]);
     //const [email, setEmail] = useState();
     const { email, setEmail } = React.useContext(AppContext);
     const [textMessage, setTextMessage] = useState();
@@ -654,7 +654,7 @@ function App() {
         <AppContext.Provider value={{ email, setEmail }}>
         <div className="App">
             <Tabs defaultActiveKey="ocr" transition={false} id="uncontrolled-tab" className="mb-3">
-                <Tab eventKey="settings" title="Settings">
+                <Tab eventKey="settings" title="⚙">
                     <Settings></Settings>
                 </Tab>
                 <Tab eventKey="ocr" title="1. Off-the-shelf OCR">
