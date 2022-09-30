@@ -142,6 +142,7 @@ function PostCorrInferenceForm(props) {
                         <Form.Control type="text" onChange={props.handleModelIDChange} required={true}/>
                         <Form.Label className="mt-2">Model ID</Form.Label>
                     </Form.Group>
+                    <a target="_blank" href="/annotator/home/#models">List of available models</a>
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="emailAddress">
