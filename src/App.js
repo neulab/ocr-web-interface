@@ -11,6 +11,8 @@ import Tabs from "react-bootstrap/Tabs";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import * as JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+
 
 
 function NewlineText(props) {
@@ -437,51 +439,57 @@ function OCR() {
         }
         formData.append("params", JSON.stringify(params));
         formData.append("email", email);
+
+        var fzip = new JSZip();
         for (let i = 0; i < files.length; i++) {
-            formData.append("file", files[i]);
-            formData.append("fileName", files[i].name);
-
+            // formData.append("file", files[i]);
+            // formData.append("fileName", files[i].name);
             imgArr[i] = { key: files[i].name, name: files[i].name, url: URL.createObjectURL(files[i]), text: "" };
+            fzip.file(files[i].name, files[i]);
         }
+        fzip.generateAsync({ type: "blob" }).then(function (blob) {
+            // saveAs(blob, "images.zip");
+            formData.append('file', blob, "images.zip");
 
-        const config = {
-            headers: {
-                "content-type": "multipart/form-data",
-                //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
-                Authorization: window.auth_token,
-                "X-CSRFToken": window.csrf_token,
-            },
-        };
+            const config = {
+                headers: {
+                    "content-type": "multipart/form-data",
+                    //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
+                    Authorization: window.auth_token,
+                    "X-CSRFToken": window.csrf_token,
+                },
+            };
 
-        axios.post(url, formData, config).then((response) => {
-            console.log(response.data);
+            axios.post(url, formData, config).then((response) => {
+                console.log(response.data);
 
-            if (Array.isArray(response.data)) {
-                setTextMessage(JSON.stringify(response.data));
-                let job_id = response.data[0]["job_id"];
-                let status_url = response.data[0]["status_url"];
-                let status = response.data[0]["status"];
-                setTextMessage(<><p className="mb-0" key="0">
-                        Files uploaded successfully and task has been queued!
-                        </p>
-                        <p className="mb-0" key="1">
-                        You can monitor the status <a target="_blank" href={status_url}>here</a>.
-                        </p>
-                        <p className="mb-0" key="2">
-                        When recognition is complete, an email will be sent to {email}.
-                        </p></>);
-            } else {
-                let i = 0;
-                for (let key in response.data) {
-                    // response.data[key] = "Test\nTest\nTest" + key;
-                    let value = response.data[key];
-                    imgArr[i]["text"] = value;
-                    i += 1;
+                if (Array.isArray(response.data)) {
+                    setTextMessage(JSON.stringify(response.data));
+                    let job_id = response.data[0]["job_id"];
+                    let status_url = response.data[0]["status_url"];
+                    let status = response.data[0]["status"];
+                    setTextMessage(<><p className="mb-0" key="0">
+                            Files uploaded successfully and task has been queued!
+                            </p>
+                            <p className="mb-0" key="1">
+                            You can monitor the status <a target="_blank" href={status_url}>here</a>.
+                            </p>
+                            <p className="mb-0" key="2">
+                            When recognition is complete, an email will be sent to {email}.
+                            </p></>);
+                } else {
+                    let i = 0;
+                    for (let key in response.data) {
+                        // response.data[key] = "Test\nTest\nTest" + key;
+                        let value = response.data[key];
+                        imgArr[i]["text"] = value;
+                        i += 1;
+                    }
+                    setUploads(imgArr);
+                    setTextMessage("");
                 }
-                setUploads(imgArr);
-                setTextMessage("");
-            }
-        }).catch( function (error) { setTextMessage(error.message); });
+            }).catch( function (error) { setTextMessage(error.message); });
+        });
     }
 
     function handleFileSelect(e) {
