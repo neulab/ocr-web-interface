@@ -13,7 +13,8 @@ import axios from "axios";
 import * as JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
-
+const isImage = (file) => file['type'].includes('image');
+const isText = (file) => file['type'].includes('text');
 
 function NewlineText(props) {
     const text = props.text;
@@ -109,7 +110,7 @@ function OCRForm(props) {
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="fileUploader">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect}  required={true}/>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} accept="image/*" required={true}/>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
@@ -135,7 +136,7 @@ function PostCorrInferenceForm(props) {
             <Row>
                 <Col xs="auto">
                     <Form.Group controlId="testData">
-                        <Form.Control type="file" onChange={props.handleTestDataSelect} required={true}/>
+                        <Form.Control type="file" onChange={props.handleTestDataSelect} accept="text/plain" required={true}/>
                         <Form.Label className="mt-2">Test data (text file)</Form.Label>
                     </Form.Group>
                 </Col>
@@ -169,19 +170,19 @@ function PostCorrTrainingForm(props) {
             <Row>
                 <Col xs="auto">
                     <Form.Group controlId="sourceData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleSourceFileSelect} required={true}/>
-                        <Form.Label className="mt-2">Source Data</Form.Label>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleSourceFileSelect} accept="text/plain" required={true}/>
+                        <Form.Label className="mt-2">Source Data (text files)</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="targetData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleTargetFileSelect} required={true}/>
-                        <Form.Label className="mt-2">Target Data</Form.Label>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleTargetFileSelect} accept="text/plain" required={true}/>
+                        <Form.Label className="mt-2">Target Data (text files)</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="unlabeledData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} required={false}/>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} accept="text/plain" required={false}/>
                         <Form.Label className="mt-2">Unlabeled Data (optional)</Form.Label>
                     </Form.Group>
                 </Col>
@@ -322,41 +323,91 @@ function PostCorrTraining() {
         }
         formData.append("params", JSON.stringify(params));
         formData.append("email", email);
+
+        var allFiles = [...sourceFiles, ...targetFiles, ...unlabeledFiles];
+        for (let i = 0; i < allFiles.length; i++) {
+            if (!isText(allFiles[i])) {
+                setTextMessage("Please upload text files only!");
+                return;
+            }
+        }
+        var sourceFilesSet = new Set();
         for (let i = 0; i < sourceFiles.length; i++) {
-            formData.append("srcData", sourceFiles[i]);
+            sourceFilesSet.add(sourceFiles[i].name);
         }
+        var targetFilesSet = new Set();
         for (let i = 0; i < targetFiles.length; i++) {
-            formData.append("tgtData", targetFiles[i]);
+            targetFilesSet.add(targetFiles[i].name);
         }
-        for (let i = 0; i < unlabeledFiles.length; i++) {
-            formData.append("unlabeledData", unlabeledFiles[i]);
+        if (targetFilesSet.size !== sourceFilesSet.size) {
+            setTextMessage("The number of source and target files should be equal!");
+            return;
         }
+        if (![...targetFilesSet].every((x) => sourceFilesSet.has(x))) {
+            setTextMessage("Source and target files should have the same file names!");
+            return;
+        }
+        
+        // for (let i = 0; i < sourceFiles.length; i++) {
+        //     formData.append("srcData", sourceFiles[i]);
+        // }
+        // for (let i = 0; i < targetFiles.length; i++) {
+        //     formData.append("tgtData", targetFiles[i]);
+        // }
+        // for (let i = 0; i < unlabeledFiles.length; i++) {
+        //     formData.append("unlabeledData", unlabeledFiles[i]);
+        // }
 
-        const config = {
-            headers: {
-                "content-type": "multipart/form-data",
-                //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
-                Authorization: window.auth_token,
-                "X-CSRFToken": window.csrf_token,
-            },
-        };
+        var srcZip = new JSZip();
+        for (let i = 0; i < sourceFiles.length; i++) {
+            srcZip.file(sourceFiles[i].name, sourceFiles[i]);
+        }
+        srcZip.generateAsync({ type: "blob" }).then(function (src_blob) {
+            formData.append('srcData', src_blob, "sourceFiles.zip");
+            var tgtZip = new JSZip();
+            for (let i = 0; i < targetFiles.length; i++) {
+                tgtZip.file(targetFiles[i].name, targetFiles[i]);
+            }
+            tgtZip.generateAsync({ type: "blob" }).then(function (tgt_blob) {
+                formData.append('tgtData', tgt_blob, "targetFiles.zip");
+                var unlabeledZip = new JSZip();
+                for (let i = 0; i < unlabeledFiles.length; i++) {
+                    unlabeledZip.file(unlabeledFiles[i].name, unlabeledFiles[i]);
+                }
+                unlabeledZip.generateAsync({ type: "blob" }).then(function (unlabeled_blob) {
+                    if (unlabeledFiles.length > 0) {
+                        formData.append('unlabeledData', unlabeled_blob, "unlabeledFiles.zip");
+                    }
 
-        axios.post(url, formData, config).then((response) => {
-            console.log(response.data);
-            let log_file = response.data[0]["log_file"]
-            let model_id = response.data[0]["model_id"]
+                    const config = {
+                        headers: {
+                            "content-type": "multipart/form-data",
+                            //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
+                            Authorization: window.auth_token,
+                            "X-CSRFToken": window.csrf_token,
+                        },
+                    };
 
-            setTextMessage(<><p className="mb-0" key="0">
-                    Training data submitted, the new model ID is <b>{model_id}</b>
-                    </p>
-                    <p className="mb-0" key="1">
-                    You can monitor the status <a target="_blank" href={log_file}>here</a>.
-                    </p>
-                    <p className="mb-0" key="2">
-                    When training is complete, an email will be sent to {email}.
-                    </p></>);
-            //setTextMessage(JSON.stringify(response.data));
-        }).catch( function (error) { setTextMessage(error.message); });
+                    axios.post(url, formData, config).then((response) => {
+                        console.log(response.data);
+                        let log_file = response.data[0]["log_file"]
+                        let model_id = response.data[0]["model_id"]
+
+                        setTextMessage(<><p className="mb-0" key="0">
+                                Training data submitted, the new model ID is <b>{model_id}</b>
+                                </p>
+                                <p className="mb-0" key="1">
+                                You can monitor the status <a target="_blank" href={log_file}>here</a>.
+                                </p>
+                                <p className="mb-0" key="2">
+                                When training is complete, an email will be sent to {email}.
+                                </p></>);
+                        //setTextMessage(JSON.stringify(response.data));
+                    }).catch( function (error) { setTextMessage(error.message); });
+                });
+            });
+        });
+
 
     }
 
@@ -442,6 +493,10 @@ function OCR() {
 
         var fzip = new JSZip();
         for (let i = 0; i < files.length; i++) {
+            if (!isImage(files[i])) {
+                setTextMessage("Please upload images only!");
+                return;
+            }
             // formData.append("file", files[i]);
             // formData.append("fileName", files[i].name);
             imgArr[i] = { key: files[i].name, name: files[i].name, url: URL.createObjectURL(files[i]), text: "" };
