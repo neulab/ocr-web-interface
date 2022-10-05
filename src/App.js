@@ -136,8 +136,8 @@ function PostCorrInferenceForm(props) {
             <Row>
                 <Col xs="auto">
                     <Form.Group controlId="testData">
-                        <Form.Control type="file" onChange={props.handleTestDataSelect} accept="text/plain" required={true}/>
-                        <Form.Label className="mt-2">Test data (text file)</Form.Label>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleTestDataSelect} accept="text/plain" required={true}/>
+                        <Form.Label className="mt-2">Test data (text files)</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
@@ -225,33 +225,43 @@ function PostCorrInference() {
         formData.append("params", JSON.stringify(params));
         formData.append("email", email);
         formData.append("model_id", modelID);
+
+        var testZip = new JSZip();
         for (let i = 0; i < testData.length; i++) {
-            formData.append("testData", testData[i]);
+            // formData.append("testData", testData[i]);
+            if (!isText(testData[i])) {
+                setTextMessage("Please upload text files only!");
+                return;
+            }
+            testZip.file(testData[i].name, testData[i]);
         }
+        testZip.generateAsync({ type: "blob" }).then(function (test_blob) {
+            formData.append('testData', test_blob, "testData.zip");
 
-        const config = {
-            headers: {
-                "content-type": "multipart/form-data",
-                //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
-                Authorization: window.auth_token,
-                "X-CSRFToken": window.csrf_token,
-            },
-        };
+            const config = {
+                headers: {
+                    "content-type": "multipart/form-data",
+                    //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
+                    Authorization: window.auth_token,
+                    "X-CSRFToken": window.csrf_token,
+                },
+            };
 
-        axios.post(url, formData, config).then((response) => {
-            console.log(response.data);
-            let log_file = response.data;
-            setTextMessage(<><p className="mb-0" key="0">
-                    Post-correction job submitted!
-                    </p>
-                    <p className="mb-0" key="1">
-                    You can monitor the status <a target="_blank" href={log_file}>here</a>.
-                    </p>
-                    <p className="mb-0" key="2">
-                    When processing is complete, an email will be sent to {email}.
-                    </p></>);
-            //setTextMessage(JSON.stringify(response.data));
-        }).catch( function (error) { setTextMessage(error.message); });
+            axios.post(url, formData, config).then((response) => {
+                console.log(response.data);
+                let log_file = response.data;
+                setTextMessage(<><p className="mb-0" key="0">
+                        Post-correction job submitted!
+                        </p>
+                        <p className="mb-0" key="1">
+                        You can monitor the status <a target="_blank" href={log_file}>here</a>.
+                        </p>
+                        <p className="mb-0" key="2">
+                        When processing is complete, an email will be sent to {email}.
+                        </p></>);
+                //setTextMessage(JSON.stringify(response.data));
+            }).catch( function (error) { setTextMessage(error.message); });
+        });
 }
 
     function handleModelIDChange(e) {
