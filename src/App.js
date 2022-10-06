@@ -727,7 +727,7 @@ function App() {
         <AppContext.Provider value={{ email, setEmail }}>
         <div className="App">
             <Tabs defaultActiveKey="ocr" transition={false} id="uncontrolled-tab" className="mb-3">
-                <Tab eventKey="settings" title="⚙">
+                <Tab eventKey="settings" title="⚙" disabled>
                     <Settings></Settings>
                 </Tab>
                 <Tab eventKey="ocr" title="1. Off-the-shelf OCR">
