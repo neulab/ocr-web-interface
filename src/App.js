@@ -64,7 +64,7 @@ function DisplayImages(props) {
         var zip = new JSZip();
         let elements = [];
         for (let i = 0; i < imgUploads.length; i++) {
-            zip.file(imgUploads[i]["key"].replace("png", "txt"), imgUploads[i]["text"]);
+            zip.file(imgUploads[i]["key"].replace(/\.[^/.]+$/, "") + ".txt", imgUploads[i]["text"]);
             // const element = document.createElement("a");
             // const file = new Blob([imgUploads[i]["text"]], { type: "text/plain" });
             // element.href = URL.createObjectURL(file);
