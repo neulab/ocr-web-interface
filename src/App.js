@@ -114,7 +114,7 @@ function OCRForm(props) {
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
-                    <Form.Group controlId="emailAddress">
+                    <Form.Group className="d-none" controlId="emailAddress">
                         <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
                         <Form.Label className="mt-2">Email Address</Form.Label>
                     </Form.Group>
@@ -148,7 +148,7 @@ function PostCorrInferenceForm(props) {
                     <a target="_blank" href="/annotator/home/#models">List of available models</a>
                 </Col>
                 <Col xs="auto">
-                    <Form.Group controlId="emailAddress">
+                    <Form.Group className="d-none" controlId="emailAddress">
                         <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
                         <Form.Label className="mt-2">Email Address</Form.Label>
                     </Form.Group>
@@ -187,7 +187,7 @@ function PostCorrTrainingForm(props) {
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
-                    <Form.Group controlId="emailAddress">
+                    <Form.Group className="d-none" controlId="emailAddress">
                         <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
                         <Form.Label className="mt-2">Email Address</Form.Label>
                     </Form.Group>
@@ -686,7 +686,7 @@ function SettingsForm(props) {
         <Form className="my-5" onSubmit={props.handleSubmit}>
             <Row>
                 <Col xs="auto">
-                    <Form.Group controlId="emailAddress">
+                    <Form.Group className="d-none" controlId="emailAddress">
                         <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
                         <Form.Label className="mt-2">Email Address</Form.Label>
                     </Form.Group>
