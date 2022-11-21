@@ -187,6 +187,13 @@ function PostCorrTrainingForm(props) {
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
+                    <Form.Group controlId="modelIDinput">
+                        <Form.Control type="text" onFocus={props.getModelIDs} onChange={props.handleModelIDChange} required={true} isInvalid={props.modelIDinvalid}/>
+                        <Form.Control.Feedback type="invalid">{props.modelIDerror}</Form.Control.Feedback>
+                        <Form.Label className="mt-2">Model ID</Form.Label>
+                    </Form.Group>
+                </Col>
+                <Col xs="auto">
                     <Form.Group className="d-none" controlId="emailAddress">
                         <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
                         <Form.Label className="mt-2">Email Address</Form.Label>
@@ -267,7 +274,7 @@ function PostCorrInference() {
     function handleModelIDChange(e) {
         e.preventDefault();
         console.log("model ID changed");
-        setModelID(e.target.value);
+        setModelID(e.target.value.trim());
     }
 
     function handleTestDataSelect(e) {
@@ -316,10 +323,21 @@ function PostCorrTraining() {
     const [unlabeledFiles, setUnlabeledFiles] = useState([]);
     //const [email, setEmail] = useState();
     const { email, setEmail } = React.useContext(AppContext);
+    const [modelID, setModelID] = useState();
+    const [modelIDs, setModelIDs] = useState();
+    const [modelIDinvalid, setModelIDinvalid] = useState();
+    const [modelIDerror, setModelIDerror] = useState();
     const [textMessage, setTextMessage] = useState();
+
+    useEffect(getModelIDs, []) // <-- empty dependency array means it will only run on first render
+
 
     function handleSubmit(e) {
         e.preventDefault();
+        if (! validateModelID(modelID)) {
+            setTextMessage(modelIDerror);
+            return false;
+        }
         setTextMessage("Uploading...");
         console.log("You clicked upload on the post-correction training form.");
 
@@ -333,6 +351,7 @@ function PostCorrTraining() {
         }
         formData.append("params", JSON.stringify(params));
         formData.append("email", email);
+        formData.append("modelID", modelID);
 
         var allFiles = [...sourceFiles, ...targetFiles, ...unlabeledFiles];
         for (let i = 0; i < allFiles.length; i++) {
@@ -413,7 +432,10 @@ function PostCorrTraining() {
                                 When training is complete, an email will be sent to {email}.
                                 </p></>);
                         //setTextMessage(JSON.stringify(response.data));
-                    }).catch( function (error) { setTextMessage(error.message); });
+                    }).catch( function (error) { 
+                        console.log(error);
+                        setTextMessage(error.message + ": " + error.response.data);
+                    });
                 });
             });
         });
@@ -445,6 +467,42 @@ function PostCorrTraining() {
         setEmail(e.target.value.trim());
     }
 
+    function getModelIDs(e) {
+        //e.preventDefault();
+        console.log("Getting list of model IDs");
+        axios.get("/annotator/get_model_ids").then((response) => {
+            console.log(response.data);
+            setModelIDs(response.data);
+        }).catch( function (error) {
+            console.log(error);
+        });
+    }
+
+    function validateModelID(model_id) {
+        if (! /^[a-zA-Z0-9_-]+$/.test(model_id)) {
+            console.log("Allowed characters a-z A-Z 1-9 - _");
+            setModelIDerror("Allowed characters a-z A-Z 1-9 - _");
+            setModelIDinvalid(true);
+            return false;
+        } else if (modelIDs.includes(model_id)) {
+            console.log("This model ID already exists");
+            setModelIDerror("This model ID already exists");
+            setModelIDinvalid(true);
+            return false;
+        }
+        return true;
+    }
+
+    function handleModelIDChange(e) {
+        e.preventDefault();
+        console.log("Model ID updated");
+        setModelIDinvalid(false);
+        let model_id = e.target.value.trim();
+        validateModelID(model_id);
+        setModelID(model_id);
+    }
+
+
     return (
         <Container>
             <Row>
@@ -460,6 +518,10 @@ function PostCorrTraining() {
                                         handleSourceFileSelect={handleSourceFileSelect} 
                                         handleTargetFileSelect={handleTargetFileSelect} 
                                         handleUnlabeledFileSelect={handleUnlabeledFileSelect}
+                                        handleModelIDChange={handleModelIDChange}
+                                        getModelIDs={getModelIDs}
+                                        modelIDinvalid={modelIDinvalid}
+                                        modelIDerror={modelIDerror}
                                         handleEmailChange={handleEmailChange} />
                                     </Col>
                                 </Row>
