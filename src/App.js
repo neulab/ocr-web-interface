@@ -110,7 +110,8 @@ function OCRForm(props) {
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="fileUploader">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} accept="image/*" required={true}/>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} accept="image/*" required={true} title="Upload one or more image files"/>
+                        <Form.Label className="mt-2">Image files to transcribe</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
@@ -136,13 +137,13 @@ function PostCorrInferenceForm(props) {
             <Row>
                 <Col xs="auto">
                     <Form.Group controlId="testData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleTestDataSelect} accept="text/plain" required={true}/>
-                        <Form.Label className="mt-2">Test data (text files)</Form.Label>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleTestDataSelect} accept="text/plain" required={true} title="Upload one or more off-the-shelf OCR output files to correct"/>
+                        <Form.Label className="mt-2">Test data (plain text files)</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="modelId">
-                        <Form.Control type="text" onChange={props.handleModelIDChange} required={true}/>
+                        <Form.Control type="text" onChange={props.handleModelIDChange} required={true} title="Please specify a model ID from the list of available model IDs"/>
                         <Form.Label className="mt-2">Model ID</Form.Label>
                     </Form.Group>
                     <a target="_blank" href="/annotator/home/#models">List of available models</a>
@@ -170,25 +171,25 @@ function PostCorrTrainingForm(props) {
             <Row>
                 <Col xs="auto">
                     <Form.Group controlId="sourceData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleSourceFileSelect} accept="text/plain" required={true}/>
-                        <Form.Label className="mt-2">Source Data (text files)</Form.Label>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleSourceFileSelect} accept="text/plain" required={true} title="First-pass OCR output files in plain text format"/>
+                        <Form.Label className="mt-2">Source Data (plain text files)</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="targetData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleTargetFileSelect} accept="text/plain" required={true}/>
-                        <Form.Label className="mt-2">Target Data (text files)</Form.Label>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleTargetFileSelect} accept="text/plain" required={true} title="Corrected first-pass OCR output (number of files and filenames should match source data set)"/>
+                        <Form.Label className="mt-2">Target Data (plain text files)</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="unlabeledData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} accept="text/plain" required={false}/>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} accept="text/plain" required={false} title="Rest of the uncorrected first-pass OCR output files"/>
                         <Form.Label className="mt-2">Unlabeled Data (optional)</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="modelIDinput">
-                        <Form.Control type="text" onFocus={props.getModelIDs} onChange={props.handleModelIDChange} required={true} isInvalid={props.modelIDinvalid}/>
+                        <Form.Control type="text" onFocus={props.getModelIDs} onChange={props.handleModelIDChange} required={true} isInvalid={props.modelIDinvalid} title="Allowed characters a-z A-Z 1-9 - _"/>
                         <Form.Control.Feedback type="invalid">{props.modelIDerror}</Form.Control.Feedback>
                         <Form.Label className="mt-2">Model ID</Form.Label>
                     </Form.Group>
