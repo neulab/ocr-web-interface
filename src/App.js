@@ -114,7 +114,7 @@ function OCRForm(props) {
                         <Form.Label className="mt-2">Image files to transcribe</Form.Label>
                     </Form.Group>
                 </Col>
-                <Col xs="auto">
+                <Col xs="auto" className="d-none">
                     <Form.Group className="d-none" controlId="emailAddress">
                         <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
                         <Form.Label className="mt-2">Email Address</Form.Label>
@@ -148,7 +148,7 @@ function PostCorrInferenceForm(props) {
                     </Form.Group>
                     <a target="_blank" href="/annotator/home/#models">List of available models</a>
                 </Col>
-                <Col xs="auto">
+                <Col xs="auto" className="d-none">
                     <Form.Group className="d-none" controlId="emailAddress">
                         <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
                         <Form.Label className="mt-2">Email Address</Form.Label>
@@ -187,6 +187,8 @@ function PostCorrTrainingForm(props) {
                         <Form.Label className="mt-2">Unlabeled Data (optional)</Form.Label>
                     </Form.Group>
                 </Col>
+            </Row>
+            <Row className="justify-content-center">
                 <Col xs="auto">
                     <Form.Group controlId="modelIDinput">
                         <Form.Control type="text" onFocus={props.getModelIDs} onChange={props.handleModelIDChange} required={true} isInvalid={props.modelIDinvalid} title="Allowed characters a-z A-Z 1-9 - _"/>
@@ -194,7 +196,7 @@ function PostCorrTrainingForm(props) {
                         <Form.Label className="mt-2">Model ID</Form.Label>
                     </Form.Group>
                 </Col>
-                <Col xs="auto">
+                <Col xs="auto" className="d-none">
                     <Form.Group className="d-none" controlId="emailAddress">
                         <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
                         <Form.Label className="mt-2">Email Address</Form.Label>
