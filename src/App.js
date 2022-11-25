@@ -6,6 +6,8 @@ import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
 import Image from "react-bootstrap/Image";
 import Accordion from "react-bootstrap/Accordion";
+import Card from 'react-bootstrap/Card';
+
 
 import Tab from "react-bootstrap/Tab";
 import Tabs from "react-bootstrap/Tabs";
@@ -296,10 +298,10 @@ function PostCorrInference() {
     return (
         <Container>
             <Row>
-                <Accordion>
+                {/* <Accordion>
                     <Accordion.Item eventKey="predict" key="predict">
                         <Accordion.Header>Correct errors using a trained model</Accordion.Header>
-                        <Accordion.Body>
+                        <Accordion.Body> */}
                             <Container>
                                 <Row className="justify-content-center">
                                     <Col xs="auto">
@@ -313,9 +315,9 @@ function PostCorrInference() {
                                     {textMessage}
                                 </Row>
                             </Container>
-                        </Accordion.Body>
+                        {/* </Accordion.Body>
                     </Accordion.Item>
-                </Accordion>
+                </Accordion> */}
             </Row>
         </Container>
     )
@@ -510,10 +512,10 @@ function PostCorrTraining() {
     return (
         <Container>
             <Row>
-                <Accordion className="pb-3">
+                {/* <Accordion className="pb-3">
                     <Accordion.Item eventKey="train" key="train">
                         <Accordion.Header>Train a new post-correction model</Accordion.Header>
-                        <Accordion.Body>
+                        <Accordion.Body> */}
                             <Container>
                                 <Row className="justify-content-center">
                                     <Col xs="auto">
@@ -533,9 +535,9 @@ function PostCorrTraining() {
                                     {textMessage}
                                 </Row>
                             </Container>
-                        </Accordion.Body>
+                        {/* </Accordion.Body>
                     </Accordion.Item>
-                </Accordion>
+                </Accordion> */}
             </Row>
         </Container>
     )
@@ -727,7 +729,7 @@ function Settings() {
 
     return (
         <Container>
-            <Row className="justify-content-center">
+            <Row className="d-none justify-content-center">
                 <Col xs="auto">
                     <SettingsForm handleSubmit={handleSubmit}
                     authToken={authToken}
@@ -792,7 +794,7 @@ function App() {
     return (
         <AppContext.Provider value={{ email, setEmail }}>
         <div className="App">
-            <Tabs defaultActiveKey="ocr" transition={false} id="uncontrolled-tab" className="mb-3">
+            {/* <Tabs defaultActiveKey="ocr" transition={false} id="uncontrolled-tab" className="mb-3">
                 <Tab eventKey="settings" title="⚙" disabled>
                     <Settings></Settings>
                 </Tab>
@@ -803,7 +805,31 @@ function App() {
                     <PostCorrTraining></PostCorrTraining>
                     <PostCorrInference></PostCorrInference>
                 </Tab>
-            </Tabs>
+            </Tabs> */}
+            <Settings></Settings>
+            <Card style={{ width: '100%' }}><Card.Body>
+            <Card.Title className="mb-3 fw-normal">Optical Character Recognition (OCR)</Card.Title>
+            <Accordion className="pb-3">
+                <Accordion.Item eventKey="ocr" key="ocr">
+                    <Accordion.Header>1. Use an off-the-shelf OCR engine</Accordion.Header>
+                    <Accordion.Body>
+                        <OCR></OCR>
+                    </Accordion.Body>
+                </Accordion.Item>
+                <Accordion.Item eventKey="train" key="train">
+                    <Accordion.Header>2. Train a new OCR post-correction model</Accordion.Header>
+                    <Accordion.Body>
+                        <PostCorrTraining></PostCorrTraining>
+                    </Accordion.Body>
+                </Accordion.Item>
+                <Accordion.Item eventKey="predict" key="predict">
+                    <Accordion.Header>3. Correct errors using a trained OCR post-correction model</Accordion.Header>
+                    <Accordion.Body>
+                        <PostCorrInference></PostCorrInference>
+                    </Accordion.Body>
+                </Accordion.Item>
+            </Accordion>
+            </Card.Body></Card>
         </div>
         </AppContext.Provider>
     );
