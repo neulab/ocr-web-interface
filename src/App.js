@@ -6,6 +6,7 @@ import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
 import Image from "react-bootstrap/Image";
 import Accordion from "react-bootstrap/Accordion";
+
 import Tab from "react-bootstrap/Tab";
 import Tabs from "react-bootstrap/Tabs";
 import React, { useState, useEffect } from "react";
@@ -99,7 +100,7 @@ function DisplayImages(props) {
 function OCRForm(props) {
     const { email, setEmail } = React.useContext(AppContext);
     return (
-        <Form className="my-5" onSubmit={props.handleSubmit}>
+        <Form className="my-4" onSubmit={props.handleSubmit}>
             <Row>
                 <Col xs="auto">
                     <Form.Select onChange={props.handleSystemSelect}>
@@ -133,7 +134,7 @@ function OCRForm(props) {
 function PostCorrInferenceForm(props) {
     const { email, setEmail } = React.useContext(AppContext);
     return (
-        <Form className="my-5" onSubmit={props.handleSubmit}>
+        <Form className="my-4" onSubmit={props.handleSubmit}>
             <Row>
                 <Col xs="auto">
                     <Form.Group controlId="testData">
@@ -167,28 +168,28 @@ function PostCorrInferenceForm(props) {
 function PostCorrTrainingForm(props) {
     const { email, setEmail } = React.useContext(AppContext);
     return (
-        <Form className="my-5" onSubmit={props.handleSubmit}>
+        <Form className="my-4" onSubmit={props.handleSubmit}>
             <Row>
-                <Col xs="auto">
+                <Col xs="4">
                     <Form.Group controlId="sourceData">
                         <Form.Control type="file" multiple="multiple" onChange={props.handleSourceFileSelect} accept="text/plain" required={true} title="First-pass OCR output files in plain text format"/>
                         <Form.Label className="mt-2">Source Data (plain text files)</Form.Label>
                     </Form.Group>
                 </Col>
-                <Col xs="auto">
+                <Col xs="4">
                     <Form.Group controlId="targetData">
                         <Form.Control type="file" multiple="multiple" onChange={props.handleTargetFileSelect} accept="text/plain" required={true} title="Corrected first-pass OCR output (number of files and filenames should match source data set)"/>
                         <Form.Label className="mt-2">Target Data (plain text files)</Form.Label>
                     </Form.Group>
                 </Col>
-                <Col xs="auto">
+                <Col xs="4">
                     <Form.Group controlId="unlabeledData">
                         <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} accept="text/plain" required={false} title="Rest of the uncorrected first-pass OCR output files"/>
                         <Form.Label className="mt-2">Unlabeled Data (optional)</Form.Label>
                     </Form.Group>
                 </Col>
             </Row>
-            <Row className="justify-content-center">
+            <Row>
                 <Col xs="auto">
                     <Form.Group controlId="modelIDinput">
                         <Form.Control type="text" onFocus={props.getModelIDs} onChange={props.handleModelIDChange} required={true} isInvalid={props.modelIDinvalid} title="Allowed characters a-z A-Z 1-9 - _"/>
@@ -748,7 +749,7 @@ function SettingsForm(props) {
     let auth_token_url = props.cmulabDomain + "/annotator/get_auth_token/";
 
     return (
-        <Form className="my-5" onSubmit={props.handleSubmit}>
+        <Form className="my-4" onSubmit={props.handleSubmit}>
             <Row>
                 <Col xs="auto">
                     <Form.Group className="d-none" controlId="emailAddress">
