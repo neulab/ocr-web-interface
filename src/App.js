@@ -7,6 +7,8 @@ import Container from "react-bootstrap/Container";
 import Image from "react-bootstrap/Image";
 import Accordion from "react-bootstrap/Accordion";
 import Card from 'react-bootstrap/Card';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Popover from 'react-bootstrap/Popover';
 
 
 import Tab from "react-bootstrap/Tab";
@@ -101,19 +103,39 @@ function DisplayImages(props) {
 
 function OCRForm(props) {
     const { email, setEmail } = React.useContext(AppContext);
+    const popover_ocr = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Select OCR engine</Popover.Header>
+            <Popover.Body>
+                Currently only Google Vision is supported.
+            </Popover.Body>
+        </Popover>
+    );
+    const popover_files = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Upload image files</Popover.Header>
+            <Popover.Body>
+                All common image file formats are supported. If you upload 3 or more images, the job will run in the background and an email with the output will be sent when it finishes.
+            </Popover.Body>
+        </Popover>
+    );
     return (
         <Form className="my-4" onSubmit={props.handleSubmit}>
             <Row>
                 <Col xs="auto">
+                    <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="left" overlay={popover_ocr}>
                     <Form.Select onChange={props.handleSystemSelect}>
                         {/* <option value="" disabled>Choose an OCR system</option> */}
                         <option value="google">Google Vision</option>
                         <option value="tesseract" disabled>Tesseract</option>
                     </Form.Select>
+                    </OverlayTrigger>
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="fileUploader">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} accept="image/*" required={true} title="Upload one or more image files"/>
+                        <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="left" overlay={popover_files}>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} accept="image/*" required={true} title=""/>
+                        </OverlayTrigger>
                         <Form.Label className="mt-2">Image files to transcribe</Form.Label>
                     </Form.Group>
                 </Col>
@@ -135,18 +157,38 @@ function OCRForm(props) {
 
 function PostCorrInferenceForm(props) {
     const { email, setEmail } = React.useContext(AppContext);
+    const popover_test = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Upload test data</Popover.Header>
+            <Popover.Body>
+                Upload first-pass OCR output files to correct. Files should be in plain txt format.
+            </Popover.Body>
+        </Popover>
+    );
+    const popover_modelid = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Specify model ID</Popover.Header>
+            <Popover.Body>
+                Please specify a model ID from the list of available models.
+            </Popover.Body>
+        </Popover>
+    );
     return (
         <Form className="my-4" onSubmit={props.handleSubmit}>
             <Row>
                 <Col xs="auto">
                     <Form.Group controlId="testData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleTestDataSelect} accept="text/plain" required={true} title="Upload one or more off-the-shelf OCR output files to correct"/>
+                        <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_test}>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleTestDataSelect} accept="text/plain" required={true} title=""/>
+                        </OverlayTrigger>
                         <Form.Label className="mt-2">Test data (plain text files)</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="modelId">
-                        <Form.Control type="text" onChange={props.handleModelIDChange} required={true} title="Please specify a model ID from the list of available model IDs"/>
+                        <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_modelid}>
+                        <Form.Control type="text" onChange={props.handleModelIDChange} required={true} title=""/>
+                        </OverlayTrigger>
                         <Form.Label className="mt-2">Model ID</Form.Label>
                     </Form.Group>
                     <a target="_blank" href="/annotator/home/#models">List of available models</a>
@@ -169,24 +211,63 @@ function PostCorrInferenceForm(props) {
 
 function PostCorrTrainingForm(props) {
     const { email, setEmail } = React.useContext(AppContext);
+    const popover_source = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Upload source data</Popover.Header>
+            <Popover.Body>
+                Upload the subset of first-pass OCR output that have been manually corrected. Files should be in plain txt format.
+            </Popover.Body>
+        </Popover>
+    );
+    const popover_target = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Upload target data</Popover.Header>
+            <Popover.Body>
+                Upload the manually corrected set of OCR output files. The names of files should be same as the ones in the source data set.
+            </Popover.Body>
+        </Popover>
+    );
+    const popover_unlabeled = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Upload unlabeled data</Popover.Header>
+            <Popover.Body>
+                This is optional. Any uncorrected files from the first-pass OCR output can be uploaded here.
+            </Popover.Body>
+        </Popover>
+    );
+    const popover_modelid = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Specify a unique model ID</Popover.Header>
+            <Popover.Body>
+                Allowed characters: a-z A-Z 1-9 - _
+                <p>Once training has started, you can monitor its status in "Your models" page.</p>
+            </Popover.Body>
+        </Popover>
+    );
     return (
         <Form className="my-4" onSubmit={props.handleSubmit}>
             <Row>
                 <Col xs="4">
                     <Form.Group controlId="sourceData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleSourceFileSelect} accept="text/plain" required={true} title="First-pass OCR output files in plain text format"/>
+                        <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_source}>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleSourceFileSelect} accept="text/plain" required={true} title=""/>
+                        </OverlayTrigger>
                         <Form.Label className="mt-2">Source Data (plain text files)</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="4">
                     <Form.Group controlId="targetData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleTargetFileSelect} accept="text/plain" required={true} title="Corrected first-pass OCR output (number of files and filenames should match source data set)"/>
+                        <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_target}>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleTargetFileSelect} accept="text/plain" required={true} title=""/>
+                        </OverlayTrigger>
                         <Form.Label className="mt-2">Target Data (plain text files)</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="4">
                     <Form.Group controlId="unlabeledData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} accept="text/plain" required={false} title="Rest of the uncorrected first-pass OCR output files"/>
+                        <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_unlabeled}>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} accept="text/plain" required={false} title=""/>
+                        </OverlayTrigger>
                         <Form.Label className="mt-2">Unlabeled Data (optional)</Form.Label>
                     </Form.Group>
                 </Col>
@@ -194,7 +275,9 @@ function PostCorrTrainingForm(props) {
             <Row>
                 <Col xs="auto">
                     <Form.Group controlId="modelIDinput">
-                        <Form.Control type="text" onFocus={props.getModelIDs} onChange={props.handleModelIDChange} required={true} isInvalid={props.modelIDinvalid} title="Allowed characters a-z A-Z 1-9 - _"/>
+                        <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_modelid}>
+                        <Form.Control type="text" onFocus={props.getModelIDs} onChange={props.handleModelIDChange} required={true} isInvalid={props.modelIDinvalid} title=""/>
+                        </OverlayTrigger>
                         <Form.Control.Feedback type="invalid">{props.modelIDerror}</Form.Control.Feedback>
                         <Form.Label className="mt-2">Model ID</Form.Label>
                     </Form.Group>
