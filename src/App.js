@@ -113,9 +113,9 @@ function OCRForm(props) {
     );
     const popover_files = (
         <Popover id="popover-basic">
-            <Popover.Header as="h3">Upload image files</Popover.Header>
+            <Popover.Header as="h3">Upload scanned images</Popover.Header>
             <Popover.Body>
-                All common image file formats are supported. If you upload 3 or more images, the job will run in the background and an email with the output will be sent when it finishes.
+                All common image file formats are supported. Cropping or slicing the document image, enhancing image by binarization, increasing contrast etc. before uploading can improve results.
             </Popover.Body>
         </Popover>
     );
@@ -215,7 +215,7 @@ function PostCorrTrainingForm(props) {
         <Popover id="popover-basic">
             <Popover.Header as="h3">Upload source data</Popover.Header>
             <Popover.Body>
-                Upload the subset of first-pass OCR output that have been manually corrected. Files should be in plain txt format.
+                Once a subset of the first-pass OCR output files have been manually corrected, upload the uncorrected versions of those files here (plain txt format).
             </Popover.Body>
         </Popover>
     );
@@ -223,7 +223,7 @@ function PostCorrTrainingForm(props) {
         <Popover id="popover-basic">
             <Popover.Header as="h3">Upload target data</Popover.Header>
             <Popover.Body>
-                Upload the manually corrected set of OCR output files. The names of files should be same as the ones in the source data set.
+                Upload the manually corrected set of OCR output files. The names and number of files should be same as the ones in the source data set.
             </Popover.Body>
         </Popover>
     );
@@ -239,8 +239,10 @@ function PostCorrTrainingForm(props) {
         <Popover id="popover-basic">
             <Popover.Header as="h3">Specify a unique model ID</Popover.Header>
             <Popover.Body>
-                Allowed characters: a-z A-Z 1-9 - _
-                <p>Once training has started, you can monitor its status in "Your models" page.</p>
+                {`
+                Allowed characters a-z A-Z 1-9 - _
+                Once training has started, you can monitor its status from the "Your models" page.
+                `}
             </Popover.Body>
         </Popover>
     );
