@@ -1,6 +1,7 @@
 import "./App.css";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
@@ -9,6 +10,8 @@ import Accordion from "react-bootstrap/Accordion";
 import Card from 'react-bootstrap/Card';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
+import Modal from 'react-bootstrap/Modal';
+
 
 
 import Tab from "react-bootstrap/Tab";
@@ -103,6 +106,9 @@ function DisplayImages(props) {
 
 function OCRForm(props) {
     const { email, setEmail } = React.useContext(AppContext);
+    const [show, setShow] = useState(false);
+    const handleClose = () => setShow(false);
+    const handleShow = () => setShow(true);
     const popover_ocr = (
         <Popover id="popover-basic">
             <Popover.Header as="h3">Select OCR engine</Popover.Header>
@@ -120,6 +126,7 @@ function OCRForm(props) {
         </Popover>
     );
     return (
+        <>
         <Form className="my-4" onSubmit={props.handleSubmit}>
             <Row>
                 <Col xs="auto">
@@ -149,14 +156,39 @@ function OCRForm(props) {
                     <Button variant="primary" type="submit">
                         Upload
                     </Button>
+                    <div className="mt-2">
+                        <a href="#" onClick={handleShow}>Need help?</a>
+                    </div>
                 </Col>
             </Row>
         </Form>
+        <Modal size="lg" show={show} onHide={handleClose} animation={false}>
+            <Modal.Header closeButton>
+                <Modal.Title>Transcribe images of scanned documents using an off-the-shelf OCR system</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+            <p>
+            Please select the OCR system you want to use (currently only “Google Vision” is supported). Next, upload
+the image files you need to digitize (multiple files can be selected in a single upload, all common image formats such as PNG and JPG, are permitted) and click the “Upload” button to sends the information to the backend server. The backend server then executes commands to preprocess the data, if necessary, and apply the selected OCR model on the input data. Finally, depending on the number of images uploaded, either the output text will be displayed here with an option to download them, or if the server is busy, the task will be queued, and an email will be sent to you when it completes.
+            </p>
+You can preprocess the scanned images before uploading them. Layout analysis of the documents, such as cropping or slicing the image as well as image enhancement techniques like binarization and improving contrast, can potentially lead to better OCR outputs. The interface does not support preprocessing, but you can use visual layout analysis tools such as LAREX8 for semi-automatic processing of the image files.
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={handleClose}>
+                    Close
+                </Button>
+            </Modal.Footer>
+        </Modal>
+        </>
+        
     );
 }
 
 function PostCorrInferenceForm(props) {
     const { email, setEmail } = React.useContext(AppContext);
+    const [show, setShow] = useState(false);
+    const handleClose = () => setShow(false);
+    const handleShow = () => setShow(true);
     const popover_test = (
         <Popover id="popover-basic">
             <Popover.Header as="h3">Upload test data</Popover.Header>
@@ -174,6 +206,7 @@ function PostCorrInferenceForm(props) {
         </Popover>
     );
     return (
+        <>
         <Form className="my-4" onSubmit={props.handleSubmit}>
             <Row>
                 <Col xs="auto">
@@ -187,11 +220,13 @@ function PostCorrInferenceForm(props) {
                 <Col xs="auto">
                     <Form.Group controlId="modelId">
                         <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_modelid}>
-                        <Form.Control type="text" onChange={props.handleModelIDChange} required={true} title=""/>
+                        <Form.Control type="text" onChange={props.handleModelIDChange} required={true} title="" placeholder="Model ID"/>
                         </OverlayTrigger>
-                        <Form.Label className="mt-2">Model ID</Form.Label>
+                        {/* <Form.Label className="mt-2">Model ID</Form.Label> */}
                     </Form.Group>
-                    <a target="_blank" href="/annotator/home/#models">List of available models</a>
+                    <div className="mt-2">
+                        <a target="_blank" href="/annotator/home/#models">List of available models</a>
+                    </div>
                 </Col>
                 <Col xs="auto" className="d-none">
                     <Form.Group className="d-none" controlId="emailAddress">
@@ -203,14 +238,38 @@ function PostCorrInferenceForm(props) {
                     <Button variant="primary" type="submit">
                         Apply model
                     </Button>
+                    <div className="mt-2">
+                        <a href="#" onClick={handleShow}>Need help?</a>
+                    </div>
                 </Col>
             </Row>
         </Form>
+        <Modal size="lg" show={show} onHide={handleClose} animation={false}>
+            <Modal.Header closeButton>
+                <Modal.Title>Correct errors using a trained OCR post-correction model</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <p>
+            Once a trained post-correction model is ready, you can apply it to improve the OCR performance on new documents. To do that, first obtain the first-pass OCR output for the new images by going back to step 1. You can then upload these files in step 3, along with the model ID of the newly trained OCR post-correction model. You can also use one of the publicly available models listed in the "Public models" tab.
+                </p>
+                Once the documents have been uploaded, a post-correction inference job will be queued in the background, and an email will be sent along with the output when the task completes.
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={handleClose}>
+                    Close
+                </Button>
+            </Modal.Footer>
+        </Modal>
+        </>
     )
 }
 
 function PostCorrTrainingForm(props) {
     const { email, setEmail } = React.useContext(AppContext);
+    const [show, setShow] = useState(false);
+    const handleClose = () => setShow(false);
+    const handleShow = () => setShow(true);
+
     const popover_source = (
         <Popover id="popover-basic">
             <Popover.Header as="h3">Upload source data</Popover.Header>
@@ -247,6 +306,7 @@ function PostCorrTrainingForm(props) {
         </Popover>
     );
     return (
+        <>
         <Form className="my-4" onSubmit={props.handleSubmit}>
             <Row>
                 <Col xs="4">
@@ -274,14 +334,14 @@ function PostCorrTrainingForm(props) {
                     </Form.Group>
                 </Col>
             </Row>
-            <Row>
+            <Row className="mt-2">
                 <Col xs="auto">
                     <Form.Group controlId="modelIDinput">
                         <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_modelid}>
-                        <Form.Control type="text" onFocus={props.getModelIDs} onChange={props.handleModelIDChange} required={true} isInvalid={props.modelIDinvalid} title=""/>
+                        <Form.Control type="text" onFocus={props.getModelIDs} onChange={props.handleModelIDChange} required={true} isInvalid={props.modelIDinvalid} title="" placeholder="Model ID"/>
                         </OverlayTrigger>
                         <Form.Control.Feedback type="invalid">{props.modelIDerror}</Form.Control.Feedback>
-                        <Form.Label className="mt-2">Model ID</Form.Label>
+                        {/* <Form.Label className="mt-2">Model ID</Form.Label> */}
                     </Form.Group>
                 </Col>
                 <Col xs="auto" className="d-none">
@@ -294,9 +354,32 @@ function PostCorrTrainingForm(props) {
                     <Button variant="primary" type="submit">
                         Train new model
                     </Button>
+                    <div className="mt-2">
+                        <a href="#" onClick={handleShow}>Need help?</a>
+                    </div>
                 </Col>
             </Row>
         </Form>
+        <Modal size="lg" show={show} onHide={handleClose} animation={false}>
+            <Modal.Header closeButton>
+                <Modal.Title>Training a new OCR post-correction model</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <p>
+            From the output of the first-pass OCR (step 1), please select a subset of the files and correct them manually. The remaining uncorrected pages will be used for semi-supervised learning. The selected files from the first-pass OCR output will be the "source dataset", while the corresponding manually corrected transcriptions will be the "target dataset". The model training typically works best if these corresponding texts are aligned at the sentence-level or at the line-level. A small number of manually annotated pages (≈10 pages) is typically sufficient to train a model, although more annotations will likely lead to a better-performing model.
+                </p>
+                <p>
+The uncorrected files become the "unlabeled dataset". These files are used for pretraining and semi-supervised learning of the model. Using unlabeled data is optional, but highly recommended.
+                </p>
+                Once you upload the data, a training job will be start in the background and an email will be sent when it completes. Training typically takes a few hours. Once training has started, you can monitor its status from the "Your models" page.
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={handleClose}>
+                    Close
+                </Button>
+            </Modal.Footer>
+        </Modal>
+        </>
     );
 }
 
