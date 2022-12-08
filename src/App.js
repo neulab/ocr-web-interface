@@ -1,6 +1,7 @@
 import "./App.css";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
+import Spinner from 'react-bootstrap/Spinner';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
@@ -141,7 +142,7 @@ function OCRForm(props) {
                 <Col xs="auto">
                     <Form.Group controlId="fileUploader">
                         <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="left" overlay={popover_files}>
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} accept="image/*" required={true} title=""/>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} accept="image/*" required={true} title="" key={props.submitDisabled? "reset1": "reset2"}/>
                         </OverlayTrigger>
                         <Form.Label className="mt-2">Image files to transcribe</Form.Label>
                     </Form.Group>
@@ -153,8 +154,15 @@ function OCRForm(props) {
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
-                    <Button variant="primary" type="submit">
-                        Upload
+                    <Button variant="primary" type="submit" disabled={props.submitDisabled}>
+                        <Spinner as="span"
+                            animation="border"
+                            size="sm"
+                            role="status"
+                            aria-hidden="true"
+                            className={props.submitDisabled ? "visible": "d-none"}
+                        />
+                        {props.submitDisabled ? "": "Upload"}
                     </Button>
                     <div className="mt-2">
                         <a href="#" onClick={handleShow}>Need help?</a>
@@ -212,7 +220,7 @@ function PostCorrInferenceForm(props) {
                 <Col xs="auto">
                     <Form.Group controlId="testData">
                         <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_test}>
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleTestDataSelect} accept="text/plain" required={true} title=""/>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleTestDataSelect} accept="text/plain" required={true} title="" key={props.submitDisabled? "reset1": "reset2"}/>
                         </OverlayTrigger>
                         <Form.Label className="mt-2">Test data (plain text files)</Form.Label>
                     </Form.Group>
@@ -235,8 +243,15 @@ function PostCorrInferenceForm(props) {
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
-                    <Button variant="primary" type="submit">
-                        Apply model
+                    <Button variant="primary" type="submit" disabled={props.submitDisabled}>
+                        <Spinner as="span"
+                            animation="border"
+                            size="sm"
+                            role="status"
+                            aria-hidden="true"
+                            className={props.submitDisabled ? "visible": "d-none"}
+                        />
+                        {props.submitDisabled ? "": "Apply model"}
                     </Button>
                     <div className="mt-2">
                         <a href="#" onClick={handleShow}>Need help?</a>
@@ -312,7 +327,7 @@ function PostCorrTrainingForm(props) {
                 <Col xs="4">
                     <Form.Group controlId="sourceData">
                         <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_source}>
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleSourceFileSelect} accept="text/plain" required={true} title=""/>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleSourceFileSelect} accept="text/plain" required={true} title="" key={props.submitDisabled? "reset1": "reset2"}/>
                         </OverlayTrigger>
                         <Form.Label className="mt-2">Source Data (plain text files)</Form.Label>
                     </Form.Group>
@@ -320,7 +335,7 @@ function PostCorrTrainingForm(props) {
                 <Col xs="4">
                     <Form.Group controlId="targetData">
                         <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_target}>
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleTargetFileSelect} accept="text/plain" required={true} title=""/>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleTargetFileSelect} accept="text/plain" required={true} title="" key={props.submitDisabled? "reset1": "reset2"}/>
                         </OverlayTrigger>
                         <Form.Label className="mt-2">Target Data (plain text files)</Form.Label>
                     </Form.Group>
@@ -328,7 +343,7 @@ function PostCorrTrainingForm(props) {
                 <Col xs="4">
                     <Form.Group controlId="unlabeledData">
                         <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_unlabeled}>
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} accept="text/plain" required={false} title=""/>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} accept="text/plain" required={false} title="" key={props.submitDisabled? "reset1": "reset2"}/>
                         </OverlayTrigger>
                         <Form.Label className="mt-2">Unlabeled Data (optional)</Form.Label>
                     </Form.Group>
@@ -351,8 +366,15 @@ function PostCorrTrainingForm(props) {
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
-                    <Button variant="primary" type="submit">
-                        Train new model
+                    <Button variant="primary" type="submit" disabled={props.submitDisabled}>
+                        <Spinner as="span"
+                            animation="border"
+                            size="sm"
+                            role="status"
+                            aria-hidden="true"
+                            className={props.submitDisabled ? "visible": "d-none"}
+                        />
+                        {props.submitDisabled ? "": "Train new model"}
                     </Button>
                     <div className="mt-2">
                         <a href="#" onClick={handleShow}>Need help?</a>
@@ -389,9 +411,16 @@ function PostCorrInference() {
     //const [email, setEmail] = useState();
     const { email, setEmail } = React.useContext(AppContext);
     const [textMessage, setTextMessage] = useState();
+    const [submitDisabled, setSubmitDisabled] = useState(false);
+
+    function resetFormInputs() {
+        setTestData([]);
+        setModelID(null);
+    }
 
     function handleSubmit(e) {
         e.preventDefault();
+        setSubmitDisabled(true);
         setTextMessage("Uploading...");
         console.log("You clicked upload on the post-correction prediction form.");
 
@@ -441,7 +470,13 @@ function PostCorrInference() {
                         When processing is complete, an email will be sent to {email}.
                         </p></>);
                 //setTextMessage(JSON.stringify(response.data));
-            }).catch( function (error) { setTextMessage(error.message); });
+                e.target.reset();
+                resetFormInputs();
+                setSubmitDisabled(false);
+            }).catch( function (error) {
+                setTextMessage(error.message);
+                setSubmitDisabled(false);
+            });
         });
 }
 
@@ -476,6 +511,7 @@ function PostCorrInference() {
                                         <PostCorrInferenceForm handleSubmit={handleSubmit}
                                          handleModelIDChange={handleModelIDChange}
                                          handleTestDataSelect={handleTestDataSelect}
+                                         submitDisabled={submitDisabled}
                                          handleEmailChange={handleEmailChange} />
                                     </Col>
                                 </Row>
@@ -502,12 +538,21 @@ function PostCorrTraining() {
     const [modelIDinvalid, setModelIDinvalid] = useState();
     const [modelIDerror, setModelIDerror] = useState();
     const [textMessage, setTextMessage] = useState();
+    const [submitDisabled, setSubmitDisabled] = useState(false);
 
     useEffect(getModelIDs, []) // <-- empty dependency array means it will only run on first render
 
 
+    function resetFormInputs() {
+        setSourceFiles([])
+        setTargetFiles([]);
+        setUnlabeledFiles([]);
+        setModelID(null);
+    }
+
     function handleSubmit(e) {
         e.preventDefault();
+        setSubmitDisabled(true);
         if (! validateModelID(modelID)) {
             setTextMessage(modelIDerror);
             return false;
@@ -606,9 +651,13 @@ function PostCorrTraining() {
                                 When training is complete, an email will be sent to {email}.
                                 </p></>);
                         //setTextMessage(JSON.stringify(response.data));
+                        e.target.reset();
+                        resetFormInputs();
+                        setSubmitDisabled(false);
                     }).catch( function (error) { 
                         console.log(error);
                         setTextMessage(error.message + ": " + error.response.data);
+                        setSubmitDisabled(false);
                     });
                 });
             });
@@ -696,6 +745,7 @@ function PostCorrTraining() {
                                         getModelIDs={getModelIDs}
                                         modelIDinvalid={modelIDinvalid}
                                         modelIDerror={modelIDerror}
+                                        submitDisabled={submitDisabled}
                                         handleEmailChange={handleEmailChange} />
                                     </Col>
                                 </Row>
@@ -718,9 +768,15 @@ function OCR() {
     const { email, setEmail } = React.useContext(AppContext);
     const [textMessage, setTextMessage] = useState();
     const [ocrSystem, setSystem] = useState("google"); // ocrSystem variable is updated with the form, but not used in processing. It can be used for adding systems in the future.
+    const [submitDisabled, setSubmitDisabled] = useState(false);
+
+    function resetFormInputs() {
+        setFiles([]);
+    }
 
     function handleSubmit(e) {
         e.preventDefault();
+        setSubmitDisabled(true);
         console.log("You clicked upload on the OCR form.");
 
         setTextMessage("Processing files...");
@@ -789,7 +845,13 @@ function OCR() {
                     setUploads(imgArr);
                     setTextMessage("");
                 }
-            }).catch( function (error) { setTextMessage(error.message); });
+                e.target.reset();
+                resetFormInputs();
+                setSubmitDisabled(false);
+            }).catch( function (error) {
+                setTextMessage(error.message);
+                setSubmitDisabled(false);
+            });
         });
     }
 
@@ -815,7 +877,7 @@ function OCR() {
         <Container>
             <Row className="justify-content-center">
                 <Col xs="auto">
-                    <OCRForm handleSubmit={handleSubmit} handleFileSelect={handleFileSelect} handleSystemSelect={handleSystemSelect} handleEmailChange={handleEmailChange}/>
+                    <OCRForm handleSubmit={handleSubmit} handleFileSelect={handleFileSelect} handleSystemSelect={handleSystemSelect} handleEmailChange={handleEmailChange} submitDisabled={submitDisabled}/>
                 </Col>
             </Row>
             <Row className="justify-content-center fs-5 text-success">
