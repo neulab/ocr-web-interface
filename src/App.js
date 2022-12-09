@@ -420,7 +420,6 @@ function PostCorrInference() {
 
     function handleSubmit(e) {
         e.preventDefault();
-        setSubmitDisabled(true);
         setTextMessage("Uploading...");
         console.log("You clicked upload on the post-correction prediction form.");
 
@@ -445,6 +444,8 @@ function PostCorrInference() {
             }
             testZip.file(testData[i].name, testData[i]);
         }
+
+        setSubmitDisabled(true);
         testZip.generateAsync({ type: "blob" }).then(function (test_blob) {
             formData.append('testData', test_blob, "testData.zip");
 
@@ -552,7 +553,6 @@ function PostCorrTraining() {
 
     function handleSubmit(e) {
         e.preventDefault();
-        setSubmitDisabled(true);
         if (! validateModelID(modelID)) {
             setTextMessage(modelIDerror);
             return false;
@@ -610,6 +610,8 @@ function PostCorrTraining() {
         for (let i = 0; i < sourceFiles.length; i++) {
             srcZip.file(sourceFiles[i].name, sourceFiles[i]);
         }
+
+        setSubmitDisabled(true);
         srcZip.generateAsync({ type: "blob" }).then(function (src_blob) {
             formData.append('srcData', src_blob, "sourceFiles.zip");
             var tgtZip = new JSZip();
@@ -776,7 +778,6 @@ function OCR() {
 
     function handleSubmit(e) {
         e.preventDefault();
-        setSubmitDisabled(true);
         console.log("You clicked upload on the OCR form.");
 
         setTextMessage("Processing files...");
@@ -804,6 +805,8 @@ function OCR() {
             imgArr[i] = { key: files[i].name, name: files[i].name, url: URL.createObjectURL(files[i]), text: "" };
             fzip.file(files[i].name, files[i]);
         }
+
+        setSubmitDisabled(true);
         fzip.generateAsync({ type: "blob" }).then(function (blob) {
             // saveAs(blob, "images.zip");
             formData.append('file', blob, "images.zip");
