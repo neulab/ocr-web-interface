@@ -228,7 +228,7 @@ function PostCorrInferenceForm(props) {
                 <Col xs="auto">
                     <Form.Group controlId="modelId">
                         <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_modelid}>
-                        <Form.Control type="text" onChange={props.handleModelIDChange} required={true} title="" placeholder="Model ID"/>
+                        <Form.Control type="text" onFocus={props.getModelIDs} onChange={props.handleModelIDChange} required={true} title="" placeholder="Model ID"/>
                         </OverlayTrigger>
                         {/* <Form.Label className="mt-2">Model ID</Form.Label> */}
                     </Form.Group>
@@ -408,6 +408,7 @@ The uncorrected files become the "unlabeled dataset". These files are used for p
 function PostCorrInference() {
     const [testData, setTestData] = useState();
     const [modelID, setModelID] = useState();
+    const [modelIDs, setModelIDs] = useState();
     //const [email, setEmail] = useState();
     const { email, setEmail } = React.useContext(AppContext);
     const [textMessage, setTextMessage] = useState();
@@ -434,6 +435,12 @@ function PostCorrInference() {
         formData.append("params", JSON.stringify(params));
         formData.append("email", email);
         formData.append("model_id", modelID);
+
+
+        if (! modelIDs.includes(modelID)) {
+            setTextMessage("Model ID does not exist!");
+            return;
+        }
 
         var testZip = new JSZip();
         for (let i = 0; i < testData.length; i++) {
@@ -498,6 +505,19 @@ function PostCorrInference() {
         console.log("Email address updated");
         setEmail(e.target.value.trim());
     }
+    
+
+    function getModelIDs(e) {
+        //e.preventDefault();
+        console.log("Getting list of model IDs");
+        axios.get("/annotator/get_model_ids").then((response) => {
+            setModelIDs(response.data);
+        }).catch( function (error) {
+            console.log(error);
+        });
+    }
+
+
 
     return (
         <Container>
@@ -513,6 +533,7 @@ function PostCorrInference() {
                                          handleModelIDChange={handleModelIDChange}
                                          handleTestDataSelect={handleTestDataSelect}
                                          submitDisabled={submitDisabled}
+                                         getModelIDs={getModelIDs}
                                          handleEmailChange={handleEmailChange} />
                                     </Col>
                                 </Row>
