@@ -482,7 +482,7 @@ function PostCorrInference() {
                 resetFormInputs();
                 setSubmitDisabled(false);
             }).catch( function (error) {
-                setTextMessage(error.message);
+                setTextMessage(error.message + ": " + error.response.data);
                 setSubmitDisabled(false);
             });
         });
@@ -873,7 +873,7 @@ function OCR() {
                 resetFormInputs();
                 setSubmitDisabled(false);
             }).catch( function (error) {
-                setTextMessage(error.message);
+                setTextMessage(error.message + ": " + error.response.data);
                 setSubmitDisabled(false);
             });
         });
