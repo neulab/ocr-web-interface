@@ -1,15 +1,29 @@
 import "./App.css";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
+import Spinner from 'react-bootstrap/Spinner';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
 import Image from "react-bootstrap/Image";
 import Accordion from "react-bootstrap/Accordion";
+import Card from 'react-bootstrap/Card';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Popover from 'react-bootstrap/Popover';
+import Modal from 'react-bootstrap/Modal';
+
+
+
 import Tab from "react-bootstrap/Tab";
 import Tabs from "react-bootstrap/Tabs";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import * as JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+
+const isImage = (file) => file['type'].includes('image');
+const isText = (file) => file['type'].includes('text');
 
 function NewlineText(props) {
     const text = props.text;
@@ -56,21 +70,28 @@ function DisplayImages(props) {
     }
 
     function handleDownload(imgUploads) {
+        var zip = new JSZip();
         let elements = [];
         for (let i = 0; i < imgUploads.length; i++) {
-            const element = document.createElement("a");
-            const file = new Blob([imgUploads[i]["text"]], { type: "text/plain" });
-            element.href = URL.createObjectURL(file);
-            element.download = imgUploads[i]["key"].replace("png", "txt");
-            elements[i] = element;
+            zip.file(imgUploads[i]["key"].replace(/\.[^/.]+$/, "") + ".txt", imgUploads[i]["text"]);
+            // const element = document.createElement("a");
+            // const file = new Blob([imgUploads[i]["text"]], { type: "text/plain" });
+            // element.href = URL.createObjectURL(file);
+            // element.download = imgUploads[i]["key"].replace("png", "txt");
+            // elements[i] = element;
         }
         console.log(elements);
 
+        /*
         for (let i = 0; i < elements.length; i++) {
             document.body.appendChild(elements[i]);
             elements[i].click();
             document.body.removeChild(elements[i]);
         }
+        */
+        zip.generateAsync({ type: "base64" }).then(function (base64) {
+            window.location.href = "data:application/zip;base64," + base64;
+        });
         console.log("done");
     }
 
@@ -85,192 +106,599 @@ function DisplayImages(props) {
 }
 
 function OCRForm(props) {
+    const { email, setEmail } = React.useContext(AppContext);
+    const [show, setShow] = useState(false);
+    const handleClose = () => setShow(false);
+    const handleShow = () => setShow(true);
+    const popover_ocr = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Select OCR engine</Popover.Header>
+            <Popover.Body>
+                Currently only Google Vision is supported.
+            </Popover.Body>
+        </Popover>
+    );
+    const popover_files = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Upload scanned images</Popover.Header>
+            <Popover.Body>
+                All common image file formats are supported. Cropping or slicing the document image, enhancing image by binarization, increasing contrast etc. before uploading can improve results.
+            </Popover.Body>
+        </Popover>
+    );
     return (
-        <Form className="my-5" onSubmit={props.handleSubmit}>
+        <>
+        <Form className="my-4" onSubmit={props.handleSubmit}>
             <Row>
                 <Col xs="auto">
+                    <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="left" overlay={popover_ocr}>
                     <Form.Select onChange={props.handleSystemSelect}>
                         {/* <option value="" disabled>Choose an OCR system</option> */}
                         <option value="google">Google Vision</option>
                         <option value="tesseract" disabled>Tesseract</option>
                     </Form.Select>
+                    </OverlayTrigger>
                 </Col>
                 <Col xs="auto">
                     <Form.Group controlId="fileUploader">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect}  required={true}/>
+                        <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="left" overlay={popover_files}>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleFileSelect} accept="image/*" required={true} title="" key={props.submitDisabled? "reset1": "reset2"}/>
+                        </OverlayTrigger>
+                        <Form.Label className="mt-2">Image files to transcribe</Form.Label>
+                    </Form.Group>
+                </Col>
+                <Col xs="auto" className="d-none">
+                    <Form.Group className="d-none" controlId="emailAddress">
+                        <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
+                        <Form.Label className="mt-2">Email Address</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
-                    <Button variant="primary" type="submit">
-                        Upload
+                    <Button variant="primary" type="submit" disabled={props.submitDisabled}>
+                        <Spinner as="span"
+                            animation="border"
+                            size="sm"
+                            role="status"
+                            aria-hidden="true"
+                            className={props.submitDisabled ? "visible": "d-none"}
+                        />
+                        {props.submitDisabled ? "": "Upload"}
                     </Button>
+                    <div className="mt-2">
+                        <a href="#" onClick={handleShow}>Need help?</a>
+                    </div>
                 </Col>
             </Row>
         </Form>
+        <Modal size="lg" show={show} onHide={handleClose} animation={false}>
+            <Modal.Header closeButton>
+                <Modal.Title>Transcribe images of scanned documents using an off-the-shelf OCR system</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+            <p>
+            Please select the OCR system you want to use (currently only “Google Vision” is supported). Next, upload
+the image files you need to digitize (multiple files can be selected in a single upload, all common image formats such as PNG and JPG, are permitted) and click the “Upload” button to sends the information to the backend server. The backend server then executes commands to preprocess the data, if necessary, and apply the selected OCR model on the input data. Finally, depending on the number of images uploaded, either the output text will be displayed here with an option to download them, or if the server is busy, the task will be queued, and an email will be sent to you when it completes.
+            </p>
+You can preprocess the scanned images before uploading them. Layout analysis of the documents, such as cropping or slicing the image as well as image enhancement techniques like binarization and improving contrast, can potentially lead to better OCR outputs. The interface does not support preprocessing, but you can use visual layout analysis tools such as LAREX8 for semi-automatic processing of the image files.
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={handleClose}>
+                    Close
+                </Button>
+            </Modal.Footer>
+        </Modal>
+        </>
+        
     );
 }
 
 function PostCorrInferenceForm(props) {
+    const { email, setEmail } = React.useContext(AppContext);
+    const [show, setShow] = useState(false);
+    const handleClose = () => setShow(false);
+    const handleShow = () => setShow(true);
+    const popover_test = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Upload test data</Popover.Header>
+            <Popover.Body>
+                Upload first-pass OCR output files to correct. Files should be in plain txt format.
+            </Popover.Body>
+        </Popover>
+    );
+    const popover_modelid = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Specify model ID</Popover.Header>
+            <Popover.Body>
+                Please specify a model ID from the list of available models.
+            </Popover.Body>
+        </Popover>
+    );
     return (
-        <Form className="my-5" onSubmit={props.handleSubmit}>
+        <>
+        <Form className="my-4" onSubmit={props.handleSubmit}>
             <Row>
                 <Col xs="auto">
-                    <Form.Group controlId="trainData">
-                        <Form.Control type="file" onChange={props.handleModelFileSelect} required={true}/>
-                        <Form.Label className="mt-2">Model File</Form.Label>
+                    <Form.Group controlId="testData">
+                        <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_test}>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleTestDataSelect} accept="text/plain" required={true} title="" key={props.submitDisabled? "reset1": "reset2"}/>
+                        </OverlayTrigger>
+                        <Form.Label className="mt-2">Test data (plain text files)</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
-                    <Form.Group controlId="unlabeledData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} required={true}/>
-                        <Form.Label className="mt-2">First-pass OCR</Form.Label>
+                    <Form.Group controlId="modelId">
+                        <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_modelid}>
+                        <Form.Control type="text" onFocus={props.getModelIDs} onChange={props.handleModelIDChange} required={true} title="" placeholder="Model ID"/>
+                        </OverlayTrigger>
+                        {/* <Form.Label className="mt-2">Model ID</Form.Label> */}
                     </Form.Group>
+                    <div className="mt-2">
+                        <a target="_blank" href="/annotator/home/#models">List of available models</a>
+                    </div>
                 </Col>
-                <Col xs="auto">
-                    <Form.Group controlId="emailAddress">
-                        <Form.Control type="email" onChange={props.handleEmailChange} required={true}/>
+                <Col xs="auto" className="d-none">
+                    <Form.Group className="d-none" controlId="emailAddress">
+                        <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
                         <Form.Label className="mt-2">Email Address</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
-                    <Button variant="primary" type="submit">
-                        Apply model
+                    <Button variant="primary" type="submit" disabled={props.submitDisabled}>
+                        <Spinner as="span"
+                            animation="border"
+                            size="sm"
+                            role="status"
+                            aria-hidden="true"
+                            className={props.submitDisabled ? "visible": "d-none"}
+                        />
+                        {props.submitDisabled ? "": "Apply model"}
                     </Button>
+                    <div className="mt-2">
+                        <a href="#" onClick={handleShow}>Need help?</a>
+                    </div>
                 </Col>
             </Row>
         </Form>
+        <Modal size="lg" show={show} onHide={handleClose} animation={false}>
+            <Modal.Header closeButton>
+                <Modal.Title>Correct errors using a trained OCR post-correction model</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <p>
+            Once a trained post-correction model is ready, you can apply it to improve the OCR performance on new documents. To do that, first obtain the first-pass OCR output for the new images by going back to step 1. You can then upload these files in step 3, along with the model ID of the newly trained OCR post-correction model. You can also use one of the publicly available models listed in the "Public models" tab.
+                </p>
+                Once the documents have been uploaded, a post-correction inference job will be queued in the background, and an email will be sent along with the output when the task completes.
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={handleClose}>
+                    Close
+                </Button>
+            </Modal.Footer>
+        </Modal>
+        </>
     )
 }
 
 function PostCorrTrainingForm(props) {
+    const { email, setEmail } = React.useContext(AppContext);
+    const [show, setShow] = useState(false);
+    const handleClose = () => setShow(false);
+    const handleShow = () => setShow(true);
+
+    const popover_source = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Upload source data</Popover.Header>
+            <Popover.Body>
+                Once a subset of the first-pass OCR output files have been manually corrected, upload the uncorrected versions of those files here (plain txt format).
+            </Popover.Body>
+        </Popover>
+    );
+    const popover_target = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Upload target data</Popover.Header>
+            <Popover.Body>
+                Upload the manually corrected set of OCR output files. The names and number of files should be same as the ones in the source data set.
+            </Popover.Body>
+        </Popover>
+    );
+    const popover_unlabeled = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Upload unlabeled data</Popover.Header>
+            <Popover.Body>
+                This is optional. Any uncorrected files from the first-pass OCR output can be uploaded here.
+            </Popover.Body>
+        </Popover>
+    );
+    const popover_modelid = (
+        <Popover id="popover-basic">
+            <Popover.Header as="h3">Specify a unique model ID</Popover.Header>
+            <Popover.Body>
+                {`
+                Allowed characters a-z A-Z 1-9 - _
+                Once training has started, you can monitor its status from the "Your models" page.
+                `}
+            </Popover.Body>
+        </Popover>
+    );
     return (
-        <Form className="my-5" onSubmit={props.handleSubmit}>
+        <>
+        <Form className="my-4" onSubmit={props.handleSubmit}>
             <Row>
-                <Col xs="auto">
-                    <Form.Group controlId="trainData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleLabeledFileSelect} required={true}/>
-                        <Form.Label className="mt-2">Training Data</Form.Label>
+                <Col xs="4">
+                    <Form.Group controlId="sourceData">
+                        <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_source}>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleSourceFileSelect} accept="text/plain" required={true} title="" key={props.submitDisabled? "reset1": "reset2"}/>
+                        </OverlayTrigger>
+                        <Form.Label className="mt-2">Source Data (plain text files)</Form.Label>
                     </Form.Group>
                 </Col>
-                <Col xs="auto">
+                <Col xs="4">
+                    <Form.Group controlId="targetData">
+                        <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_target}>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleTargetFileSelect} accept="text/plain" required={true} title="" key={props.submitDisabled? "reset1": "reset2"}/>
+                        </OverlayTrigger>
+                        <Form.Label className="mt-2">Target Data (plain text files)</Form.Label>
+                    </Form.Group>
+                </Col>
+                <Col xs="4">
                     <Form.Group controlId="unlabeledData">
-                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} />
-                        <Form.Label className="mt-2">Unlabeled Data</Form.Label>
+                        <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_unlabeled}>
+                        <Form.Control type="file" multiple="multiple" onChange={props.handleUnlabeledFileSelect} accept="text/plain" required={false} title="" key={props.submitDisabled? "reset1": "reset2"}/>
+                        </OverlayTrigger>
+                        <Form.Label className="mt-2">Unlabeled Data (optional)</Form.Label>
                     </Form.Group>
                 </Col>
+            </Row>
+            <Row className="mt-2">
                 <Col xs="auto">
-                    <Form.Group controlId="emailAddress">
-                        <Form.Control type="email" onChange={props.handleEmailChange} required={true}/>
+                    <Form.Group controlId="modelIDinput">
+                        <OverlayTrigger trigger="hover" delay={{ show: 250, hide: 400 }} placement="top" overlay={popover_modelid}>
+                        <Form.Control type="text" onFocus={props.getModelIDs} onChange={props.handleModelIDChange} required={true} isInvalid={props.modelIDinvalid} title="" placeholder="Model ID"/>
+                        </OverlayTrigger>
+                        <Form.Control.Feedback type="invalid">{props.modelIDerror}</Form.Control.Feedback>
+                        {/* <Form.Label className="mt-2">Model ID</Form.Label> */}
+                    </Form.Group>
+                </Col>
+                <Col xs="auto" className="d-none">
+                    <Form.Group className="d-none" controlId="emailAddress">
+                        <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
                         <Form.Label className="mt-2">Email Address</Form.Label>
                     </Form.Group>
                 </Col>
                 <Col xs="auto">
-                    <Button variant="primary" type="submit">
-                        Train new model
+                    <Button variant="primary" type="submit" disabled={props.submitDisabled}>
+                        <Spinner as="span"
+                            animation="border"
+                            size="sm"
+                            role="status"
+                            aria-hidden="true"
+                            className={props.submitDisabled ? "visible": "d-none"}
+                        />
+                        {props.submitDisabled ? "": "Train new model"}
                     </Button>
+                    <div className="mt-2">
+                        <a href="#" onClick={handleShow}>Need help?</a>
+                    </div>
                 </Col>
             </Row>
         </Form>
+        <Modal size="lg" show={show} onHide={handleClose} animation={false}>
+            <Modal.Header closeButton>
+                <Modal.Title>Training a new OCR post-correction model</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <p>
+            From the output of the first-pass OCR (step 1), please select a subset of the files and correct them manually. The remaining uncorrected pages will be used for semi-supervised learning. The selected files from the first-pass OCR output will be the "source dataset", while the corresponding manually corrected transcriptions will be the "target dataset". The model training typically works best if these corresponding texts are aligned at the sentence-level or at the line-level. A small number of manually annotated pages (≈10 pages) is typically sufficient to train a model, although more annotations will likely lead to a better-performing model.
+                </p>
+                <p>
+The uncorrected files become the "unlabeled dataset". These files are used for pretraining and semi-supervised learning of the model. Using unlabeled data is optional, but highly recommended.
+                </p>
+                Once you upload the data, a training job will be start in the background and an email will be sent when it completes. Training typically takes a few hours. Once training has started, you can monitor its status from the "Your models" page.
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={handleClose}>
+                    Close
+                </Button>
+            </Modal.Footer>
+        </Modal>
+        </>
     );
 }
 
 function PostCorrInference() {
-    const [modelFile, setModelFile] = useState();
-    const [unlabeledFiles, setUnlabeledFiles] = useState();
-    const [email, setEmail] = useState();
+    const [testData, setTestData] = useState();
+    const [modelID, setModelID] = useState();
+    const [modelIDs, setModelIDs] = useState();
+    //const [email, setEmail] = useState();
+    const { email, setEmail } = React.useContext(AppContext);
     const [textMessage, setTextMessage] = useState();
+    const [submitDisabled, setSubmitDisabled] = useState(false);
+
+    function resetFormInputs() {
+        setTestData([]);
+        setModelID(null);
+    }
 
     function handleSubmit(e) {
         e.preventDefault();
+        setTextMessage("Uploading...");
         console.log("You clicked upload on the post-correction prediction form.");
 
         // Add code to send modelFile, unlabeledFiles, email to the backend and get monitoring URL.
 
-        const url = "toy_monitoring_url/job_id"
+        var url = window.cmulab_domain + "/annotator/test_single_source_ocr/";
 
-        setTextMessage(<><p className="mb-0" key="0">
-                Post-correction job submitted!
-                </p>
-                <p className="mb-0" key="1">
-                Monitor the status of your job <a href={url}>here</a>.
-                </p>
-                <p className="mb-0" key="2">
-                When the job is complete, an email with the link to download the post-corrected text files will be sent to your email address.
-                </p></>);
+        const formData = new FormData();
+        var params = {
+            "debug": window.debug
+        }
+        formData.append("params", JSON.stringify(params));
+        formData.append("email", email);
+        formData.append("model_id", modelID);
+
+
+        if (! modelIDs.includes(modelID)) {
+            setTextMessage("Model ID does not exist!");
+            return;
+        }
+
+        var testZip = new JSZip();
+        for (let i = 0; i < testData.length; i++) {
+            // formData.append("testData", testData[i]);
+            if (!isText(testData[i])) {
+                setTextMessage("Please upload text files only!");
+                return;
+            }
+            testZip.file(testData[i].name, testData[i]);
+        }
+
+        setSubmitDisabled(true);
+        testZip.generateAsync({ type: "blob" }).then(function (test_blob) {
+            formData.append('testData', test_blob, "testData.zip");
+
+            const config = {
+                headers: {
+                    "content-type": "multipart/form-data",
+                    //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
+                    Authorization: window.auth_token,
+                    "X-CSRFToken": window.csrf_token,
+                },
+            };
+
+            axios.post(url, formData, config).then((response) => {
+                console.log(response.data);
+                let log_file = response.data;
+                setTextMessage(<><p className="mb-0" key="0">
+                        Post-correction job submitted!
+                        </p>
+                        <p className="mb-0" key="1">
+                        You can monitor the status <a target="_blank" href={log_file}>here</a>.
+                        </p>
+                        <p className="mb-0" key="2">
+                        When processing is complete, an email will be sent to {email}.
+                        </p></>);
+                //setTextMessage(JSON.stringify(response.data));
+                e.target.reset();
+                resetFormInputs();
+                setSubmitDisabled(false);
+            }).catch( function (error) {
+                setTextMessage(error.message + ": " + error.response.data);
+                setSubmitDisabled(false);
+            });
+        });
 }
 
-    function handleModelFileSelect(e) {
+    function handleModelIDChange(e) {
         e.preventDefault();
-        console.log("You selected model file on the post-correction inference form.");
-        setModelFile(e.target.files);
+        console.log("model ID changed");
+        setModelID(e.target.value.trim());
     }
 
-    function handleUnlabeledFileSelect(e) {
+    function handleTestDataSelect(e) {
         e.preventDefault();
         console.log("You selected unlabeled data files on the post-correction inference form.");
-        setUnlabeledFiles(e.target.files);
+        setTestData(e.target.files);
     }
 
     function handleEmailChange(e) {
         e.preventDefault();
         console.log("Email address updated");
-        setEmail(e.target.value);
+        setEmail(e.target.value.trim());
     }
+    
+
+    function getModelIDs(e) {
+        //e.preventDefault();
+        console.log("Getting list of model IDs");
+        axios.get("/annotator/get_model_ids").then((response) => {
+            setModelIDs(response.data);
+        }).catch( function (error) {
+            console.log(error);
+        });
+    }
+
+
 
     return (
         <Container>
             <Row>
-                <Accordion>
+                {/* <Accordion>
                     <Accordion.Item eventKey="predict" key="predict">
                         <Accordion.Header>Correct errors using a trained model</Accordion.Header>
-                        <Accordion.Body>
+                        <Accordion.Body> */}
                             <Container>
                                 <Row className="justify-content-center">
                                     <Col xs="auto">
-                                        <PostCorrInferenceForm handleSubmit={handleSubmit} handleModelFileSelect={handleModelFileSelect} handleUnlabeledFileSelect={handleUnlabeledFileSelect} handleEmailChange={handleEmailChange} />
+                                        <PostCorrInferenceForm handleSubmit={handleSubmit}
+                                         handleModelIDChange={handleModelIDChange}
+                                         handleTestDataSelect={handleTestDataSelect}
+                                         submitDisabled={submitDisabled}
+                                         getModelIDs={getModelIDs}
+                                         handleEmailChange={handleEmailChange} />
                                     </Col>
                                 </Row>
                                 <Row className="justify-content-center text-success">
                                     {textMessage}
                                 </Row>
                             </Container>
-                        </Accordion.Body>
+                        {/* </Accordion.Body>
                     </Accordion.Item>
-                </Accordion>
+                </Accordion> */}
             </Row>
         </Container>
     )
 }
 
 function PostCorrTraining() {
-    const [labeledFiles, setLabeledFiles] = useState();
-    const [unlabeledFiles, setUnlabeledFiles] = useState();
-    const [email, setEmail] = useState();
+    const [sourceFiles, setSourceFiles] = useState();
+    const [targetFiles, setTargetFiles] = useState();
+    const [unlabeledFiles, setUnlabeledFiles] = useState([]);
+    //const [email, setEmail] = useState();
+    const { email, setEmail } = React.useContext(AppContext);
+    const [modelID, setModelID] = useState();
+    const [modelIDs, setModelIDs] = useState();
+    const [modelIDinvalid, setModelIDinvalid] = useState();
+    const [modelIDerror, setModelIDerror] = useState();
     const [textMessage, setTextMessage] = useState();
+    const [submitDisabled, setSubmitDisabled] = useState(false);
+
+    useEffect(getModelIDs, []) // <-- empty dependency array means it will only run on first render
+
+
+    function resetFormInputs() {
+        setSourceFiles([])
+        setTargetFiles([]);
+        setUnlabeledFiles([]);
+        setModelID(null);
+    }
 
     function handleSubmit(e) {
         e.preventDefault();
+        if (! validateModelID(modelID)) {
+            setTextMessage(modelIDerror);
+            return false;
+        }
+        setTextMessage("Uploading...");
         console.log("You clicked upload on the post-correction training form.");
 
         // Add code to send labeledFiles, unlabeledFiles, email to the backend and get monitoring URL.
 
-        const url = "toy_monitoring_url/job_id"
+        var url = window.cmulab_domain + "/annotator/train_single_source_ocr/";
 
-        setTextMessage(<><p className="mb-0" key="0">
-                Training data submitted!
-                </p>
-                <p className="mb-0" key="1">
-                Monitor the status of your model training job <a href={url}>here</a>.
-                </p>
-                <p className="mb-0" key="2">
-                When training is complete, an email with the link to download the model will be sent to your email address.
-                </p></>);
+        const formData = new FormData();
+        var params = {
+            "debug": window.debug
+        }
+        formData.append("params", JSON.stringify(params));
+        formData.append("email", email);
+        formData.append("modelID", modelID);
+
+        var allFiles = [...sourceFiles, ...targetFiles, ...unlabeledFiles];
+        for (let i = 0; i < allFiles.length; i++) {
+            if (!isText(allFiles[i])) {
+                setTextMessage("Please upload text files only!");
+                return;
+            }
+        }
+        var sourceFilesSet = new Set();
+        for (let i = 0; i < sourceFiles.length; i++) {
+            sourceFilesSet.add(sourceFiles[i].name);
+        }
+        var targetFilesSet = new Set();
+        for (let i = 0; i < targetFiles.length; i++) {
+            targetFilesSet.add(targetFiles[i].name);
+        }
+        if (targetFilesSet.size !== sourceFilesSet.size) {
+            setTextMessage("The number of source and target files should be equal!");
+            return;
+        }
+        if (![...targetFilesSet].every((x) => sourceFilesSet.has(x))) {
+            setTextMessage("Source and target files should have the same file names!");
+            return;
+        }
+        
+        // for (let i = 0; i < sourceFiles.length; i++) {
+        //     formData.append("srcData", sourceFiles[i]);
+        // }
+        // for (let i = 0; i < targetFiles.length; i++) {
+        //     formData.append("tgtData", targetFiles[i]);
+        // }
+        // for (let i = 0; i < unlabeledFiles.length; i++) {
+        //     formData.append("unlabeledData", unlabeledFiles[i]);
+        // }
+
+        var srcZip = new JSZip();
+        for (let i = 0; i < sourceFiles.length; i++) {
+            srcZip.file(sourceFiles[i].name, sourceFiles[i]);
+        }
+
+        setSubmitDisabled(true);
+        srcZip.generateAsync({ type: "blob" }).then(function (src_blob) {
+            formData.append('srcData', src_blob, "sourceFiles.zip");
+            var tgtZip = new JSZip();
+            for (let i = 0; i < targetFiles.length; i++) {
+                tgtZip.file(targetFiles[i].name, targetFiles[i]);
+            }
+            tgtZip.generateAsync({ type: "blob" }).then(function (tgt_blob) {
+                formData.append('tgtData', tgt_blob, "targetFiles.zip");
+                var unlabeledZip = new JSZip();
+                for (let i = 0; i < unlabeledFiles.length; i++) {
+                    unlabeledZip.file(unlabeledFiles[i].name, unlabeledFiles[i]);
+                }
+                unlabeledZip.generateAsync({ type: "blob" }).then(function (unlabeled_blob) {
+                    if (unlabeledFiles.length > 0) {
+                        formData.append('unlabeledData', unlabeled_blob, "unlabeledFiles.zip");
+                    }
+
+                    const config = {
+                        headers: {
+                            "content-type": "multipart/form-data",
+                            //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
+                            Authorization: window.auth_token,
+                            "X-CSRFToken": window.csrf_token,
+                        },
+                    };
+
+                    axios.post(url, formData, config).then((response) => {
+                        console.log(response.data);
+                        let log_file = response.data[0]["log_file"]
+                        let model_id = response.data[0]["model_id"]
+
+                        setTextMessage(<><p className="mb-0" key="0">
+                                Training data submitted, the new model ID is <b>{model_id}</b>
+                                </p>
+                                <p className="mb-0" key="1">
+                                You can monitor the status <a target="_blank" href={log_file}>here</a>.
+                                </p>
+                                <p className="mb-0" key="2">
+                                When training is complete, an email will be sent to {email}.
+                                </p></>);
+                        //setTextMessage(JSON.stringify(response.data));
+                        e.target.reset();
+                        resetFormInputs();
+                        setSubmitDisabled(false);
+                    }).catch( function (error) { 
+                        console.log(error);
+                        setTextMessage(error.message + ": " + error.response.data);
+                        setSubmitDisabled(false);
+                    });
+                });
+            });
+        });
+
+
     }
 
-    function handleLabeledFileSelect(e) {
+    function handleSourceFileSelect(e) {
         e.preventDefault();
-        console.log("You selected labeled data files on the post-correction training form.");
-        setLabeledFiles(e.target.files);
+        console.log("You selected source data files on the post-correction training form.");
+        setSourceFiles(e.target.files);
+    }
+
+    function handleTargetFileSelect(e) {
+        e.preventDefault();
+        console.log("You selected target data files on the post-correction training form.");
+        setTargetFiles(e.target.files);
     }
 
     function handleUnlabeledFileSelect(e) {
@@ -282,29 +710,75 @@ function PostCorrTraining() {
     function handleEmailChange(e) {
         e.preventDefault();
         console.log("Email address updated");
-        setEmail(e.target.value);
+        setEmail(e.target.value.trim());
     }
+
+    function getModelIDs(e) {
+        //e.preventDefault();
+        console.log("Getting list of model IDs");
+        axios.get("/annotator/get_model_ids").then((response) => {
+            console.log(response.data);
+            setModelIDs(response.data);
+        }).catch( function (error) {
+            console.log(error);
+        });
+    }
+
+    function validateModelID(model_id) {
+        if (! /^[a-zA-Z0-9_-]+$/.test(model_id)) {
+            console.log("Allowed characters a-z A-Z 1-9 - _");
+            setModelIDerror("Allowed characters a-z A-Z 1-9 - _");
+            setModelIDinvalid(true);
+            return false;
+        } else if (modelIDs.includes(model_id)) {
+            console.log("This model ID already exists");
+            setModelIDerror("This model ID already exists");
+            setModelIDinvalid(true);
+            return false;
+        }
+        return true;
+    }
+
+    function handleModelIDChange(e) {
+        e.preventDefault();
+        console.log("Model ID updated");
+        setModelIDinvalid(false);
+        let model_id = e.target.value.trim();
+        validateModelID(model_id);
+        setModelID(model_id);
+    }
+
 
     return (
         <Container>
             <Row>
-                <Accordion className="pb-3">
+                {/* <Accordion className="pb-3">
                     <Accordion.Item eventKey="train" key="train">
                         <Accordion.Header>Train a new post-correction model</Accordion.Header>
-                        <Accordion.Body>
+                        <Accordion.Body> */}
                             <Container>
                                 <Row className="justify-content-center">
                                     <Col xs="auto">
-                                        <PostCorrTrainingForm handleSubmit={handleSubmit} handleLabeledFileSelect={handleLabeledFileSelect} handleUnlabeledFileSelect={handleUnlabeledFileSelect} handleEmailChange={handleEmailChange} />
+                                        <PostCorrTrainingForm 
+                                        handleSubmit={handleSubmit}
+                                        handleSourceFileSelect={handleSourceFileSelect} 
+                                        handleTargetFileSelect={handleTargetFileSelect} 
+                                        handleUnlabeledFileSelect={handleUnlabeledFileSelect}
+                                        handleModelIDChange={handleModelIDChange}
+                                        getModelIDs={getModelIDs}
+                                        modelIDinvalid={modelIDinvalid}
+                                        modelIDerror={modelIDerror}
+                                        submitDisabled={submitDisabled}
+                                        handleEmailChange={handleEmailChange} />
                                     </Col>
                                 </Row>
                                 <Row className="justify-content-center text-success">
                                     {textMessage}
                                 </Row>
                             </Container>
-                        </Accordion.Body>
+                        {/* </Accordion.Body>
                     </Accordion.Item>
-                </Accordion>
+                </Accordion> */}
             </Row>
         </Container>
     )
@@ -313,9 +787,15 @@ function PostCorrTraining() {
 function OCR() {
     const [files, setFiles] = useState();
     const [imgUploads, setUploads] = useState();
+    //const [email, setEmail] = useState();
+    const { email, setEmail } = React.useContext(AppContext);
     const [textMessage, setTextMessage] = useState();
     const [ocrSystem, setSystem] = useState("google"); // ocrSystem variable is updated with the form, but not used in processing. It can be used for adding systems in the future.
-    const url = "http://rabat.sp.cs.cmu.edu:8088/annotator/ocr-post-correction/";
+    const [submitDisabled, setSubmitDisabled] = useState(false);
+
+    function resetFormInputs() {
+        setFiles([]);
+    }
 
     function handleSubmit(e) {
         e.preventDefault();
@@ -327,34 +807,75 @@ function OCR() {
 
         const formData = new FormData();
 
-        for (let i = 0; i < files.length; i++) {
-            formData.append("file", files[i]);
-            formData.append("fileName", files[i].name);
-            formData.append("params", '{"debug": 1}');
+        var url = window.cmulab_domain + "/annotator/ocr-post-correction/";
 
+        var params = {
+            "debug": window.debug
+        }
+        formData.append("params", JSON.stringify(params));
+        formData.append("email", email);
+
+        var fzip = new JSZip();
+        for (let i = 0; i < files.length; i++) {
+            if (!isImage(files[i])) {
+                setTextMessage("Please upload images only!");
+                return;
+            }
+            // formData.append("file", files[i]);
+            // formData.append("fileName", files[i].name);
             imgArr[i] = { key: files[i].name, name: files[i].name, url: URL.createObjectURL(files[i]), text: "" };
+            fzip.file(files[i].name, files[i]);
         }
 
-        const config = {
-            headers: {
-                "content-type": "multipart/form-data",
-                Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
-            },
-        };
+        setSubmitDisabled(true);
+        fzip.generateAsync({ type: "blob" }).then(function (blob) {
+            // saveAs(blob, "images.zip");
+            formData.append('file', blob, "images.zip");
 
-        axios.post(url, formData, config).then((response) => {
-            console.log(response.data);
+            const config = {
+                headers: {
+                    "content-type": "multipart/form-data",
+                    //Authorization: "5e72d818c2f4250687f090bb7ec5466184982edc",
+                    Authorization: window.auth_token,
+                    "X-CSRFToken": window.csrf_token,
+                },
+            };
 
-            let i = 0;
+            axios.post(url, formData, config).then((response) => {
+                console.log(response.data);
 
-            for (let key in response.data) {
-                // response.data[key] = "Test\nTest\nTest" + key;
-                let value = response.data[key];
-                imgArr[i]["text"] = value;
-                i += 1;
-            }
-            setUploads(imgArr);
-            setTextMessage("");
+                if (Array.isArray(response.data)) {
+                    setTextMessage(JSON.stringify(response.data));
+                    let job_id = response.data[0]["job_id"];
+                    let status_url = response.data[0]["status_url"];
+                    let status = response.data[0]["status"];
+                    setTextMessage(<><p className="mb-0" key="0">
+                            Files uploaded successfully and task has been queued!
+                            </p>
+                            <p className="mb-0" key="1">
+                            You can monitor the status <a target="_blank" href={status_url}>here</a>.
+                            </p>
+                            <p className="mb-0" key="2">
+                            When recognition is complete, an email will be sent to {email}.
+                            </p></>);
+                } else {
+                    let i = 0;
+                    for (let key in response.data) {
+                        // response.data[key] = "Test\nTest\nTest" + key;
+                        let value = response.data[key];
+                        imgArr[i]["text"] = value;
+                        i += 1;
+                    }
+                    setUploads(imgArr);
+                    setTextMessage("");
+                }
+                e.target.reset();
+                resetFormInputs();
+                setSubmitDisabled(false);
+            }).catch( function (error) {
+                setTextMessage(error.message + ": " + error.response.data);
+                setSubmitDisabled(false);
+            });
         });
     }
 
@@ -370,14 +891,20 @@ function OCR() {
         setSystem(e.target.value);
     }
 
+    function handleEmailChange(e) {
+        e.preventDefault();
+        console.log("Email address updated");
+        setEmail(e.target.value.trim());
+    }
+
     return (
         <Container>
             <Row className="justify-content-center">
                 <Col xs="auto">
-                    <OCRForm handleSubmit={handleSubmit} handleFileSelect={handleFileSelect} handleSystemSelect={handleSystemSelect} />
+                    <OCRForm handleSubmit={handleSubmit} handleFileSelect={handleFileSelect} handleSystemSelect={handleSystemSelect} handleEmailChange={handleEmailChange} submitDisabled={submitDisabled}/>
                 </Col>
             </Row>
-            <Row className="justify-content-center fs-5 text-danger">
+            <Row className="justify-content-center fs-5 text-success">
                 {textMessage}
             </Row>
             <DisplayImages imgUploads={imgUploads} />
@@ -385,19 +912,180 @@ function OCR() {
     );
 }
 
-function App() {
+function Settings() {
+    const { email, setEmail } = React.useContext(AppContext);
+    const [authToken, setAuthToken] = useState("8470ede027588b80c5b82ab5c9e78b8daea68635");
+    window.auth_token = authToken;
+    const [cmulabDomain, setCmulabDomain] = useState("http://localhost:8088");
+    window.cmulab_domain = cmulabDomain;
+    const [textMessage, setTextMessage] = useState();
+
+    useEffect(()=>{
+        axios.get("/annotator/get_auth_token/").then((response) => {
+            console.log(response);
+            if (response.status === 401) {
+                window.location.href = "/accounts/login/?next=/static/ocr-web-interface/index.html";
+            }
+            setEmail(response.data.email);
+            window.email = response.data.email;
+            setAuthToken(response.data.auth_token);
+            window.auth_token = response.data.auth_token;
+            setCmulabDomain("");
+            window.cmulab_domain = "";
+            window.csrf_token = response.data.csrf_token;
+        }).catch( function (error) {
+            console.log(error);
+            if (error.response.status === 401) {
+            window.location.href = "/accounts/login/?next=/static/ocr-web-interface/index.html";
+            }
+        });
+    }, []) // <-- empty dependency array
+
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        console.log("You saved settings.");
+        window.email = email;
+        window.auth_token = authToken;
+        window.cmulab_domain = cmulabDomain;
+        setTextMessage(<><p className="mb-0" key="0">
+                Settings saved!
+                </p>
+                <p className="mb-0" key="1">
+                    <small>Email: {email}</small>
+                </p>
+                <p className="mb-0" key="2">
+                    <small>Auth Token: {authToken}</small>
+                </p>
+                <p className="mb-0" key="3">
+                    <small>CMULAB domain: {cmulabDomain}</small>
+                </p></>);
+    }
+
+    function handleEmailChange(e) {
+        e.preventDefault();
+        console.log("Email address updated");
+        setEmail(e.target.value.trim());
+    }
+
+    function handleAuthTokenChange(e) {
+        e.preventDefault();
+        console.log("Email address updated");
+        setAuthToken(e.target.value.trim());
+    }
+
+    function handleCmulabDomainChange(e) {
+        e.preventDefault();
+        console.log("Email address updated");
+        setCmulabDomain(e.target.value.trim().replace(/\/+$/, ""));
+    }
+
+
     return (
+        <Container>
+            <Row className="d-none justify-content-center">
+                <Col xs="auto">
+                    <SettingsForm handleSubmit={handleSubmit}
+                    authToken={authToken}
+                    handleAuthTokenChange={handleAuthTokenChange}
+                    cmulabDomain={cmulabDomain}
+                    handleCmulabDomainChange={handleCmulabDomainChange}
+                    handleEmailChange={handleEmailChange}/>
+                </Col>
+            </Row>
+            <Row className="justify-content-center fs-5 text-success">
+                {textMessage}
+            </Row>
+        </Container>
+    );
+}
+
+function SettingsForm(props) {
+    const { email, setEmail } = React.useContext(AppContext);
+    let auth_token_url = props.cmulabDomain + "/annotator/get_auth_token/";
+
+    return (
+        <Form className="my-4" onSubmit={props.handleSubmit}>
+            <Row>
+                <Col xs="auto">
+                    <Form.Group className="d-none" controlId="emailAddress">
+                        <Form.Control type="email" onChange={props.handleEmailChange} required={true} defaultValue={email}/>
+                        <Form.Label className="mt-2">Email Address</Form.Label>
+                    </Form.Group>
+                </Col>
+                <Col xs="auto">
+                    <Form.Group controlId="authToken">
+                        <Form.Control type="text" onChange={props.handleAuthTokenChange} required={true} defaultValue={props.authToken}/>
+                        <Form.Label className="mt-2">Auth Token</Form.Label>
+                    </Form.Group>
+                    Get an Auth Token <a target="_blank" href={auth_token_url}>here</a>
+                </Col>
+                <Col xs="auto">
+                    <Form.Group controlId="cmulabDoman">
+                        <Form.Control type="text" onChange={props.handleCmulabDomainChange} required={true} defaultValue={props.cmulabDomain}/>
+                        <Form.Label className="mt-2">CMULAB domain</Form.Label>
+                    </Form.Group>
+                </Col>
+                <Col xs="auto">
+                    <Button variant="primary" type="submit">
+                        Save
+                    </Button>
+                </Col>
+            </Row>
+        </Form>
+    );
+}
+
+const AppContext = React.createContext();
+
+function App() {
+    console.log("Loading App...");
+    const [email, setEmail] = useState();
+    if (window.debug === undefined) {
+        window.debug = 0;
+    }
+
+    return (
+        <AppContext.Provider value={{ email, setEmail }}>
         <div className="App">
-            <Tabs defaultActiveKey="ocr" transition={false} id="uncontrolled-tab" className="mb-3">
-                <Tab eventKey="ocr" title="Off-the-shelf OCR">
+            {/* <Tabs defaultActiveKey="ocr" transition={false} id="uncontrolled-tab" className="mb-3">
+                <Tab eventKey="settings" title="⚙" disabled>
+                    <Settings></Settings>
+                </Tab>
+                <Tab eventKey="ocr" title="1. Off-the-shelf OCR">
                     <OCR></OCR>
                 </Tab>
-                <Tab eventKey="post" title="Automatic Post-correction">
+                <Tab eventKey="post" title="2. Automatic Post-correction">
                     <PostCorrTraining></PostCorrTraining>
                     <PostCorrInference></PostCorrInference>
                 </Tab>
-            </Tabs>
+            </Tabs> */}
+            <Settings></Settings>
+            <Card style={{ width: '100%' }}><Card.Body>
+            <Card.Title className="mb-3 fw-normal">Optical Character Recognition (OCR)</Card.Title>
+            <Accordion className="pb-3">
+                <Accordion.Item eventKey="ocr" key="ocr">
+                    <Accordion.Header>1. Use an off-the-shelf OCR engine</Accordion.Header>
+                    <Accordion.Body>
+                        <OCR></OCR>
+                    </Accordion.Body>
+                </Accordion.Item>
+                <Accordion.Item eventKey="train" key="train">
+                    <Accordion.Header>2. Train a new OCR post-correction model</Accordion.Header>
+                    <Accordion.Body>
+                        <PostCorrTraining></PostCorrTraining>
+                    </Accordion.Body>
+                </Accordion.Item>
+                <Accordion.Item eventKey="predict" key="predict">
+                    <Accordion.Header>3. Correct errors using a trained OCR post-correction model</Accordion.Header>
+                    <Accordion.Body>
+                        <PostCorrInference></PostCorrInference>
+                    </Accordion.Body>
+                </Accordion.Item>
+            </Accordion>
+            </Card.Body></Card>
         </div>
+        </AppContext.Provider>
     );
 }
 
